@@ -1,0 +1,12 @@
+
+jdk:
+  - oraclejdk8
+  - openjdk8
+
+sudo: true    // Recurring problem in travis according to github
+language: java
+
+jobs:
+  include:
+    - stage: Unit test
+      script: ./gradlew test
