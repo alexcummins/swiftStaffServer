@@ -1,9 +1,6 @@
+os: linux
+dist: xenial
 
-jdk:
-  - oraclejdk8
-  - openjdk8
-
-sudo: true    # Recurring problem in travis according to github
 language: java
 
 install: ./gradlew assemble
@@ -20,4 +17,6 @@ jobs:
   include:
     - stage: Unit test
       script: ./gradlew test && ./gradlew check
+    - stage: build
+      script: ./gradlew build
       
