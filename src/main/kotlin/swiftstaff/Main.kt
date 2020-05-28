@@ -22,6 +22,9 @@ import org.apache.log4j.BasicConfigurator
 import io.ktor.routing.*
 
 
+val helloWorld =  HelloWorld();
+
+
 // Main server
 fun Application.module() {
     install(DefaultHeaders)
@@ -40,14 +43,15 @@ fun Application.module() {
     }
     routing {
         get("/") {
-            call.respondText("Hello World", ContentType.Text.Html)
+            call.respondText(helloWorld.test().toString(), ContentType.Text.Html)
         }
     }
 }
 
 fun main(args: Array<String>) {
     BasicConfigurator.configure()
-    embeddedServer(Netty, 8080, module = Application::module).start()
+    print(helloWorld.test())
+//    embeddedServer(Netty, 8080, module = Application::module).start()
 }
 
 
