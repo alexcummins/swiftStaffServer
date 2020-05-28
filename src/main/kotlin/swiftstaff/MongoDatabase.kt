@@ -25,9 +25,13 @@ object MongoDatabase :  Database {
 
     // Implementation follows Kotlin generics for inline virtual methods and interfaces
 
-    override fun < T : Any> find(filter: Bson, classParam: KClass<T>, collection: MongoCollection<T>): MutableList<T> {
+    override fun < T : Any> find(filter: Bson?, classParam: KClass<T>, collection: MongoCollection<T>): MutableList<T> {
         val returnList = mutableListOf<T>()
-        returnList.addAll(collection.find(filter))
+        if (filter != null) {
+            returnList.addAll(collection.find(filter))
+        } else {
+            returnList.addAll(collection.find())
+        }
         return returnList;
     }
 
@@ -40,6 +44,6 @@ object MongoDatabase :  Database {
 
     inline fun <reified T : Any> insert(data: T): Boolean = insert(data, T::class, this.db.getCollection<T>())
 
-    inline fun <reified T : Any> find(filter: Bson): MutableList<T> = find(filter, T::class, this.db.getCollection<T>())
+    inline fun <reified T : Any> find(filter: Bson? = null): MutableList<T> = find(filter, T::class, this.db.getCollection<T>())
 
 }
