@@ -27,7 +27,7 @@ dependencies {
     implementation(group = "org.slf4j", name = "slf4j-api", version = "1.7.5")
     implementation(group = "org.slf4j", name = "slf4j-log4j12", version = "1.7.5")
     implementation("org.mongodb:mongodb-driver-sync:4.0.3")
-//    implementation("org.litote.kmongo:kmongo:4.0.1")
+    implementation("org.litote.kmongo:kmongo:4.0.1")
     testImplementation(kotlin("test"))
     testImplementation(kotlin("test-junit"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")

@@ -2,6 +2,8 @@ os: linux
 dist: xenial
 
 language: java
+services:
+  - mongodb
 
 install: ./gradlew assemble
 
@@ -16,7 +18,10 @@ cache:
 jobs:
   include:
     - stage: Unit test
-      script: ./gradlew test && ./gradlew check
-    - stage: build
-      script: ./gradlew build
-      
+      script: ./gradlew test
+    - stage: Deploy
+      script: echo "deploy"
+
+before_script:
+  - sleep 12
+  - mongo test --eval 'db.createUser({user:"mongoadmin",pwd:"mongoadmin",roles:["readWrite"]});'
