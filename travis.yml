@@ -6,7 +6,10 @@ jdk:
 sudo: true    // Recurring problem in travis according to github
 language: java
 
+install: ./gradlew assemble
+
 jobs:
   include:
     - stage: Unit test
-      script: ./gradlew test
+      script: ./gradlew test && ./gradlew check
+      
