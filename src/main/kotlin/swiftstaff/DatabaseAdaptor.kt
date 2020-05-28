@@ -10,12 +10,15 @@ import org.bson.Document
 data class Jedi(val name: String, val age: Int)
 
 
-class HelloWorld {
-
+object DatabaseAdaptor {
+    fun getMongoClient(): MongoClient {
+        val connectionString = ConnectionString("mongodb://myUserAdmin:SwiftStaff@10.106.0.2")
+        val mongoClient = MongoClients.create(connectionString)
+        return mongoClient;
+    }
 
      fun test() : String  {
-
-         val mongoClient = MongoClients.create(ConnectionString("mongodb://167.99.193.160"))
+         val mongoClient = getMongoClient()
          val database = mongoClient.getDatabase("test")
          val tbl = database.getCollection("bookings");
          val document = Document()
