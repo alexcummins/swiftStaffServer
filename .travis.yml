@@ -3,7 +3,7 @@ jdk:
   - oraclejdk8
   - openjdk8
 
-sudo: true    // Recurring problem in travis according to github
+sudo: true    # Recurring problem in travis according to github
 language: java
 
 install: ./gradlew assemble
