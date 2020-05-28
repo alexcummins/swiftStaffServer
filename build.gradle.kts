@@ -35,6 +35,18 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
 }
 
+sourceSets.getByName("test") {
+    java.srcDir("src/test/java")
+    java.srcDir("src/test/kotlin")
+}
+
+sourceSets.main {
+    java.srcDirs("src/main/java", "src/main/kotlin")
+}
+
+sourceSets.test {
+    java.srcDirs("test/main/java", "test/main/kotlin")
+}
 tasks {
 
     compileKotlin {

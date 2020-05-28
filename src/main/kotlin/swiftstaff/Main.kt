@@ -36,14 +36,14 @@ fun Application.module() {
     }
     routing {
         get("/") {
-            call.respondText(DatabaseAdaptor.test(), ContentType.Text.Html)
+//            call.respondText(DatabaseAdaptor.test(), ContentType.Text.Html)
         }
     }
 }
 
 fun main(args: Array<String>) {
     BasicConfigurator.configure()
-    print(DatabaseAdaptor.test())
+//    print(DatabaseAdaptor.test())
 //    embeddedServer(Netty, 8080, module = Application::module).start()
 }
 
