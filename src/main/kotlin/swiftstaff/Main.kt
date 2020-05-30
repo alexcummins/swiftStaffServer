@@ -73,6 +73,7 @@ fun Application.module() {
                                 close(CloseReason(CloseReason.Codes.NORMAL, "Client said BYE"))
                             }
                         }
+                        else -> {}
                     }
                 } finally {
                     // Either if there was an error, of it the connection was closed gracefully.
