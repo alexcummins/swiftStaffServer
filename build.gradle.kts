@@ -24,6 +24,7 @@ dependencies {
     implementation("io.ktor:ktor-jackson:$ktorVersion")
     implementation("com.google.code.gson:gson:2.8.6")
     implementation("io.ktor:ktor-gson:$ktorVersion")
+    implementation("io.ktor:ktor-websockets:$ktorVersion")
     implementation(group = "org.slf4j", name = "slf4j-api", version = "1.7.5")
     implementation(group = "org.slf4j", name = "slf4j-log4j12", version = "1.7.5")
     implementation("org.mongodb:mongodb-driver-sync:4.0.3")
