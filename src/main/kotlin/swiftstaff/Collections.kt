@@ -1,5 +1,7 @@
 package swiftstaff
 
+import swiftstaff.api.v1.JobResponse
+
 interface Collection {
     val _id: String?
 }
@@ -67,4 +69,4 @@ data class WorkerRestaurantRelation(
     val relationType: Int = 0
 ) : Collection
 
-data class Jobs(val count: Int, val jobsList: MutableList<Job>)
+data class Jobs(val count: Int, val jobsList: MutableList<JobResponse>)

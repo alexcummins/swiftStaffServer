@@ -1,5 +1,8 @@
 package swiftstaff.api.v1
 
+import swiftstaff.Job
+import swiftstaff.Restaurant
+
 enum class UserType (val num: Int) {
     Restaurant(1),
     Worker(2)
@@ -68,4 +71,9 @@ data class NewJobRequest(
         val startTime: String = "07:00",
         val endTime: String = "15:00",
         val extraInfo: String = ""
+)
+
+data class JobResponse(
+        val job: Job,
+        val restaurant: Restaurant
 )

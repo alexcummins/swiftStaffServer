@@ -113,8 +113,19 @@ fun Application.module() {
 
         get("/api/v1/jobs") {
             val jobs = MongoDatabase.find<Job>()
+            val jobsList: MutableList<JobResponse> = mutableListOf()
+            jobs.forEach {
+                val restaurant = MongoDatabase.find<Restaurant>(Restaurant::_id eq it.restaurantId)
+                val jobResponse =  if(restaurant.isNotEmpty()){
+                    JobResponse(job = it, restaurant = restaurant.first())
+                } else {
+                    JobResponse(job = it, restaurant = Restaurant())
+                }
+                jobsList.add(jobResponse)
+
+            }
             if (jobs.isNotEmpty()) {
-                call.respond(status = HttpStatusCode.OK, message = Jobs(jobs.size, jobs))
+                call.respond(status = HttpStatusCode.OK, message = Jobs(jobs.size, jobsList))
             }
         }
 
@@ -185,9 +196,19 @@ fun Application.module() {
                             val text = frame.readText()
                             println(text)
                             val jobs = MongoDatabase.find<Job>()
+                            val jobsList: MutableList<JobResponse> = mutableListOf()
+                            jobs.forEach {
+                                val restaurant = MongoDatabase.find<Restaurant>(Restaurant::_id eq it.restaurantId)
+                                val jobResponse =  if(restaurant.isNotEmpty()){
+                                   JobResponse(job = it, restaurant = restaurant.first())
+                                } else {
+                                    JobResponse(job = it, restaurant = Restaurant())
+                                }
+                                jobsList.add(jobResponse)
+                            }
                             if (jobs.isNotEmpty()) {
                                 val gson = Gson()
-                                outgoing.send(Frame.Text(gson.toJson(Jobs(jobs.size, jobs))))
+                                outgoing.send(Frame.Text(gson.toJson(Jobs(jobs.size, jobsList))))
                             }
 
                             if (text.equals("bye", ignoreCase = true)) {
@@ -249,7 +270,7 @@ private fun createUser(signup: Credentials, collection: Collection, userType: Us
 }
 
 fun main(args: Array<String>) {
-//    BasicConfigurator.configure()
+    BasicConfigurator.configure()
     embeddedServer(Netty, 8080, module = Application::module).start()
 }
 
