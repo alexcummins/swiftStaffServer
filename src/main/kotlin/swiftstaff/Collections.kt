@@ -41,7 +41,7 @@ data class User(
     val salt: String = "",
     val userType: Int = 1,
     val foreignTableId: String = "",
-    val fcmTokens: MutableList<String> = mutableListOf(),
+    var fcmTokens: MutableList<String> = mutableListOf(),
     val signUpFinished: Boolean = false
 ): Collection
 

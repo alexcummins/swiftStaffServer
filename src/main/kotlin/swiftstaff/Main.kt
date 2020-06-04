@@ -2,6 +2,7 @@ package swiftstaff
 
 import com.google.gson.Gson
 import io.ktor.application.Application
+import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.features.CORS
@@ -25,6 +26,8 @@ import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
 import org.apache.log4j.BasicConfigurator
+import org.litote.kmongo.eq
+import org.litote.kmongo.match
 import swiftstaff.api.v1.*
 
 
@@ -63,11 +66,10 @@ fun Application.module() {
                 if (success){
                     call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id))
                 } else {
-                    call.respond(HttpStatusCode.InternalServerError)
+                    call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
                 }
-                call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id))
             } else {
-                call.respond(HttpStatusCode.InternalServerError)
+                call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
             }
         }
 
@@ -86,10 +88,10 @@ fun Application.module() {
                 if (success){
                     call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id))
                 } else {
-                    call.respond(HttpStatusCode.InternalServerError)
+                    call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
                 }
             } else {
-                call.respond(HttpStatusCode.InternalServerError)
+                call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
             }
         }
 
@@ -100,6 +102,53 @@ fun Application.module() {
             }
         }
 
+
+        get("/api/v1/login") {
+            val loginAttempt: LoginAttempt = call.receive<LoginAttempt>()
+            val users = MongoDatabase.find<User>(match(User::email eq loginAttempt.email))
+            if (users.isNotEmpty()) {
+                val user = users.first();
+                val passwordHash = user.passwordHash
+                val salt = user.salt
+                if (passwordHash == hashPassword(salt, loginAttempt.password)) {
+                    val fcmTokenList = user.fcmTokens;
+                    if (!fcmTokenList.contains(loginAttempt.fcmToken)) {
+                        fcmTokenList.add(loginAttempt.fcmToken);
+                        user.fcmTokens = fcmTokenList
+                        MongoDatabase.update(data = user, filter = User::email eq user.email)
+                    }
+
+                    if (user.userType == UserType.Worker.num) {
+                        val workerObj = MongoDatabase.find<Worker>(match(Worker::_id eq user.foreignTableId))
+                        if (workerObj.isNotEmpty()) {
+                            val worker = workerObj.first()
+                            val responseObject = LoginWorkerResponse(userId = user._id.orEmpty(), userType = user.userType, email = user.email, fName = worker.fName,
+                                    lName = worker.lName, phone = worker.phone, signUpFinished = user.signUpFinished)
+                            call.respond(status = HttpStatusCode.OK, message = responseObject)
+                        } else {
+                            internalServerError(call = call)
+                        }
+                    } else if (user.userType == UserType.Restaurant.num) {
+                        val restaurantObj = MongoDatabase.find<Restaurant>(match(Restaurant::_id eq user.foreignTableId))
+                        if (restaurantObj.isNotEmpty()) {
+                            val restaurant = restaurantObj.first()
+                            val responseObject = LoginRestaurantResponse(userId = user._id.orEmpty(), userType = user.userType, email = user.email, fName = "",
+                                    lName = "", restaurantPhone = restaurant.phone, restaurantName = restaurant.name, restaurantEmail = restaurant.restaurantEmailAddress, signUpFinished = user.signUpFinished)
+                            call.respond(status = HttpStatusCode.OK, message = responseObject)
+                        } else {
+                            internalServerError(call = call)
+                        }
+                    } else {
+                        internalServerError(call = call)
+                    }
+                } else {
+                    internalServerError(call = call)
+                }
+            } else {
+                internalServerError(call = call)
+            }
+
+        }
         webSocket("/api/v1/jobs") { // websocketSession
             for (frame in incoming) {
                 try {
@@ -137,10 +186,14 @@ fun Application.module() {
             if (success) {
                 call.respond(status = HttpStatusCode.Created, message = mapOf("id" to job._id))
             } else {
-                call.respond(HttpStatusCode.InternalServerError)
+                internalServerError(call = call)
             }
         }
     }
+}
+
+private suspend fun internalServerError(message:String = "Internal Server Error", call: ApplicationCall){
+    return call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
 }
 
 private fun createUser(signup: Credentials, collection: Collection, userType: UserType): User {
@@ -150,7 +203,7 @@ private fun createUser(signup: Credentials, collection: Collection, userType: Us
         email = signup.email,
         passwordHash = passwordHash,
         salt = salt,
-        userType = userType.ordinal,
+        userType = userType.num,
         foreignTableId = collection._id!!
     )
 }

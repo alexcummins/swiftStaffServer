@@ -3,6 +3,7 @@ import com.mongodb.ConnectionString
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
+import com.mongodb.client.result.UpdateResult
 import org.bson.conversions.Bson
 import org.litote.kmongo.*
 import kotlin.reflect.KClass
@@ -41,9 +42,21 @@ object MongoDatabase :  Database {
         return result.wasAcknowledged()
     }
 
+    override fun <T : Any> update(data: T, filter: Bson,  classParam: KClass<T>, collection: MongoCollection<T>): Boolean{
+        return collection.updateOne(filter, data).wasAcknowledged()
+    }
+
 
     inline fun <reified T : Any> insert(data: T): Boolean = insert(data, T::class, this.db.getCollection<T>())
 
     inline fun <reified T : Any> find(filter: Bson? = null): MutableList<T> = find(filter, T::class, this.db.getCollection<T>())
+
+    inline fun <reified T : Any> update(data: T, filter: Bson? = null): Boolean {
+        return if (filter != null) {
+            update(data, filter, T::class, this.db.getCollection<T>())
+        } else {
+             this.db.getCollection<T>().updateOne(data).wasAcknowledged()
+        }
+    }
 
 }
