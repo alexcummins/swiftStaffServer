@@ -12,6 +12,6 @@ fun generateSalt(): String {
 
 fun hashPassword(salt: String, password: String): String {
     val bcryptHash: ByteArray =
-        BCrypt.withDefaults().hash(6, salt.toByteArray(StandardCharsets.ISO_8859_1), password.toByteArray())
+        BCrypt.withDefaults().hash(3, salt.toByteArray(StandardCharsets.ISO_8859_1), password.toByteArray())
     return String(bcryptHash, StandardCharsets.ISO_8859_1)
 }
