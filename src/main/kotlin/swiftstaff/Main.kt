@@ -218,7 +218,7 @@ fun Application.module() {
 }
 
 private suspend fun internalServerError(message:String = "Internal Server Error", call: ApplicationCall){
-    return call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
+    return call.respond(message = message, status = HttpStatusCode.InternalServerError)
 }
 
 private fun createUser(signup: Credentials, collection: Collection, userType: UserType): User {
