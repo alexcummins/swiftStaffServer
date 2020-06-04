@@ -16,7 +16,7 @@ data class SignupWorker(
     val fName: String,
     val lName: String,
     val phone: Long,
-    val dob: Int
+    val dob: String
 ) : Credentials
 
 data class SignupRestaurant(
@@ -55,6 +55,6 @@ data class LoginRestaurantResponse(
     val restaurantPhone: Long,
     val fName: String,
     val lName: String,
-    val signUpFinished: Boolean
-
+    val signUpFinished: Boolean,
+    val restaurantId: String
 )

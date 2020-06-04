@@ -102,20 +102,27 @@ fun Application.module() {
         }
 
 
-        get("/api/v1/login") {
-            val loginAttempt: LoginAttempt = call.receive<LoginAttempt>()
+        post("/api/v1/login") {
+            println("enter user")
+
+            val loginAttempt = call.receive<LoginAttempt>()
+            println("recieved user")
             val users = MongoDatabase.find<User>(User::email eq loginAttempt.email)
+            println("found user")
+            println(users.size)
             if (users.isNotEmpty()) {
                 val user = users.first();
                 val passwordHash = user.passwordHash
                 val salt = user.salt
                 if (passwordHash == hashPassword(salt, loginAttempt.password)) {
+                    println("passwords match")
                     val fcmTokenList = user.fcmTokens;
                     if (!fcmTokenList.contains(loginAttempt.fcmToken)) {
                         fcmTokenList.add(loginAttempt.fcmToken);
                         user.fcmTokens = fcmTokenList
                         MongoDatabase.update(data = user, filter = User::email eq user.email)
                     }
+                    println("after tokens")
 
                     if (user.userType == UserType.Worker.num) {
                         val workerObj = MongoDatabase.find<Worker>(Worker::_id eq user.foreignTableId)
@@ -132,7 +139,9 @@ fun Application.module() {
                         if (restaurantObj.isNotEmpty()) {
                             val restaurant = restaurantObj.first()
                             val responseObject = LoginRestaurantResponse(userId = user._id.orEmpty(), userType = user.userType, email = user.email, fName = "",
-                                    lName = "", restaurantPhone = restaurant.phone, restaurantName = restaurant.name, restaurantEmail = restaurant.restaurantEmailAddress, signUpFinished = user.signUpFinished)
+                                    lName = "", restaurantPhone = restaurant.phone, restaurantName = restaurant.name,
+                                    restaurantEmail = restaurant.restaurantEmailAddress, signUpFinished = user.signUpFinished,
+                                    restaurantId = restaurant._id.orEmpty())
                             call.respond(status = HttpStatusCode.OK, message = responseObject)
                         } else {
                             internalServerError(call = call)
@@ -208,7 +217,7 @@ private fun createUser(signup: Credentials, collection: Collection, userType: Us
 }
 
 fun main(args: Array<String>) {
-    BasicConfigurator.configure()
+//    BasicConfigurator.configure()
     embeddedServer(Netty, 8080, module = Application::module).start()
 }
 
