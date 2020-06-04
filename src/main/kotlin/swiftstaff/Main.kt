@@ -52,22 +52,39 @@ fun Application.module() {
 
         post("/api/v1/signup/worker") {
             val signup = call.receive<SignupWorker>()
+            println("Worker Signup correctly recieved")
             val worker = Worker(
                 fName = signup.fName,
                 lName = signup.lName,
                 phone = signup.phone,
                 dob = signup.dob
             )
+            println("Worker class created")
+
             val success = MongoDatabase.insert(worker)
+            println("Worker inserted success: $success")
+
             if (success) {
+                println("About to create user")
                 val user = createUser(signup, worker, UserType.Worker)
+                println("User Created")
                 val success = MongoDatabase.insert(user)
+                println("User succesfully inserted")
+
                 if (success){
+                    println("About to respond")
+
                     call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id))
+                    println("Responding")
+
                 } else {
+                    println("User unsuccesful")
+
                     internalServerError(call = call)
                 }
             } else {
+                println("worker unsucessful")
+
                 internalServerError(call = call)
             }
         }
@@ -205,8 +222,14 @@ private suspend fun internalServerError(message:String = "Internal Server Error"
 }
 
 private fun createUser(signup: Credentials, collection: Collection, userType: UserType): User {
+    println("About to generate salt")
     val salt: String = generateSalt()
+    println("Salt generated")
+
     val passwordHash: String = hashPassword(salt, signup.password)
+    println("Hash generated")
+    println("About to return user class")
+
     return User(
         email = signup.email,
         passwordHash = passwordHash,
