@@ -7,11 +7,11 @@ import java.security.SecureRandom
 // Documentation https://github.com/patrickfav/bcrypt
 
 fun generateSalt(): String {
-    return String(SecureRandom().generateSeed(16), StandardCharsets.UTF_8)
+    return String(SecureRandom().generateSeed(16), StandardCharsets.ISO_8859_1)
 }
 
 fun hashPassword(salt: String, password: String): String {
     val bcryptHash: ByteArray =
-        BCrypt.withDefaults().hash(6, salt.toByteArray(StandardCharsets.UTF_8), password.toByteArray())
-    return String(bcryptHash, StandardCharsets.UTF_8)
+        BCrypt.withDefaults().hash(6, salt.toByteArray(StandardCharsets.ISO_8859_1), password.toByteArray())
+    return String(bcryptHash, StandardCharsets.ISO_8859_1)
 }
