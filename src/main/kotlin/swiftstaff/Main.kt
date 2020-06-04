@@ -27,7 +27,6 @@ import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
 import org.apache.log4j.BasicConfigurator
 import org.litote.kmongo.eq
-import org.litote.kmongo.match
 import swiftstaff.api.v1.*
 
 
@@ -66,10 +65,10 @@ fun Application.module() {
                 if (success){
                     call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id))
                 } else {
-                    call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
+                    internalServerError(call = call)
                 }
             } else {
-                call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
+                internalServerError(call = call)
             }
         }
 
@@ -105,7 +104,7 @@ fun Application.module() {
 
         get("/api/v1/login") {
             val loginAttempt: LoginAttempt = call.receive<LoginAttempt>()
-            val users = MongoDatabase.find<User>(match(User::email eq loginAttempt.email))
+            val users = MongoDatabase.find<User>(User::email eq loginAttempt.email)
             if (users.isNotEmpty()) {
                 val user = users.first();
                 val passwordHash = user.passwordHash
@@ -119,7 +118,7 @@ fun Application.module() {
                     }
 
                     if (user.userType == UserType.Worker.num) {
-                        val workerObj = MongoDatabase.find<Worker>(match(Worker::_id eq user.foreignTableId))
+                        val workerObj = MongoDatabase.find<Worker>(Worker::_id eq user.foreignTableId)
                         if (workerObj.isNotEmpty()) {
                             val worker = workerObj.first()
                             val responseObject = LoginWorkerResponse(userId = user._id.orEmpty(), userType = user.userType, email = user.email, fName = worker.fName,
@@ -129,7 +128,7 @@ fun Application.module() {
                             internalServerError(call = call)
                         }
                     } else if (user.userType == UserType.Restaurant.num) {
-                        val restaurantObj = MongoDatabase.find<Restaurant>(match(Restaurant::_id eq user.foreignTableId))
+                        val restaurantObj = MongoDatabase.find<Restaurant>(Restaurant::_id eq user.foreignTableId)
                         if (restaurantObj.isNotEmpty()) {
                             val restaurant = restaurantObj.first()
                             val responseObject = LoginRestaurantResponse(userId = user._id.orEmpty(), userType = user.userType, email = user.email, fName = "",
@@ -142,10 +141,10 @@ fun Application.module() {
                         internalServerError(call = call)
                     }
                 } else {
-                    internalServerError(call = call)
+                    call.respond(message = "Unauthorized", status = HttpStatusCode.Unauthorized)
                 }
             } else {
-                internalServerError(call = call)
+                call.respond(message = "Unauthorized", status = HttpStatusCode.Unauthorized)
             }
 
         }
