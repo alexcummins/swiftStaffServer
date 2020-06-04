@@ -25,6 +25,7 @@ import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
 import org.apache.log4j.BasicConfigurator
+import swiftstaff.api.v1.*
 
 
 // Main server
@@ -46,6 +47,52 @@ fun Application.module() {
         }
     }
     routing {
+
+        post("/api/v1/signup/worker") {
+            val signup = call.receive<SignupWorker>()
+            val worker = Worker(
+                fName = signup.fName,
+                lName = signup.lName,
+                phone = signup.phone,
+                dob = signup.dob
+            )
+            val success = MongoDatabase.insert(worker)
+            if (success) {
+                val user = createUser(signup, worker, UserType.Worker)
+                val success = MongoDatabase.insert(user)
+                if (success){
+                    call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id))
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
+                call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id))
+            } else {
+                call.respond(HttpStatusCode.InternalServerError)
+            }
+        }
+
+        post("/api/v1/signup/restaurant") {
+            val signup = call.receive<SignupRestaurant>()
+            val restaurant = Restaurant(
+                name = signup.name,
+                phone = signup.phone,
+                restaurantEmailAddress = signup.restaurantEmailAddress,
+                address = signup.address
+            )
+            val success = MongoDatabase.insert(restaurant)
+            if (success) {
+                val user = createUser(signup, restaurant, UserType.Restaurant)
+                val success = MongoDatabase.insert(user)
+                if (success){
+                    call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id))
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
+            } else {
+                call.respond(HttpStatusCode.InternalServerError)
+            }
+        }
+
         get("/api/v1/jobs") {
             val jobs = MongoDatabase.find<Job>()
             if (jobs.isNotEmpty()) {
@@ -73,7 +120,8 @@ fun Application.module() {
                                 close(CloseReason(CloseReason.Codes.NORMAL, "Client said BYE"))
                             }
                         }
-                        else -> {}
+                        else -> {
+                        }
                     }
                 } finally {
                     // Either if there was an error, of it the connection was closed gracefully.
@@ -93,6 +141,18 @@ fun Application.module() {
             }
         }
     }
+}
+
+private fun createUser(signup: Credentials, collection: Collection, userType: UserType): User {
+    val salt: String = generateSalt()
+    val passwordHash: String = hashPassword(salt, signup.password)
+    return User(
+        email = signup.email,
+        passwordHash = passwordHash,
+        salt = salt,
+        userType = userType.ordinal,
+        foreignTableId = collection._id!!
+    )
 }
 
 fun main(args: Array<String>) {
