@@ -206,7 +206,16 @@ fun Application.module() {
 
 
         post("/api/v1/jobs") {
-            val job = call.receive<Job>()
+            val newJob = call.receive<NewJobRequest>()
+            val job = Job(
+                    restaurantId = newJob.restaurantId,
+                    sendStrategyId = newJob.sendStrategyId,
+                    hourlyRate = newJob.hourlyRate,
+                    expertiseId = newJob.expertiseId,
+                    startTime = newJob.startTime,
+                    endTime = newJob.endTime,
+                    date = newJob.date,
+                    extraInfo = newJob.extraInfo)
             val success = MongoDatabase.insert(job)
             if (success) {
                 call.respond(status = HttpStatusCode.Created, message = mapOf("id" to job._id))

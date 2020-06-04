@@ -50,7 +50,7 @@ data class Job(
     override val _id: String? = null,
     val restaurantId: String = " ",
     val workerId: String = " ",
-    val sendStrategyId: String = "1",
+    val sendStrategyId: Int = 1,
     val hourlyRate: String = "1075",
     val status: Int = 0,
     val expertiseId: Int = 0,

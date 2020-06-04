@@ -58,3 +58,14 @@ data class LoginRestaurantResponse(
     val signUpFinished: Boolean,
     val restaurantId: String
 )
+
+data class NewJobRequest(
+        val restaurantId: String,
+        val sendStrategyId: Int = 1,
+        val hourlyRate: String = "1075",
+        val expertiseId: Int = 1,
+        val date: String = "01/01/2000",
+        val startTime: String = "07:00",
+        val endTime: String = "15:00",
+        val extraInfo: String = ""
+)
