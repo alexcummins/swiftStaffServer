@@ -25,10 +25,11 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
-import org.apache.log4j.BasicConfigurator
 import org.litote.kmongo.eq
 import swiftstaff.api.v1.*
-
+import io.github.rybalkinsd.kohttp.dsl.httpPost
+import io.github.rybalkinsd.kohttp.ext.url
+import org.apache.log4j.BasicConfigurator
 
 // Main server
 fun Application.module() {
@@ -48,6 +49,8 @@ fun Application.module() {
             disableHtmlEscaping()
         }
     }
+
+
     routing {
 
         post("/api/v1/signup/worker") {
@@ -240,6 +243,7 @@ fun Application.module() {
             val success = MongoDatabase.insert(job)
             if (success) {
                 call.respond(status = HttpStatusCode.Created, message = mapOf("id" to job._id))
+                sendJobsOut(job)
             } else {
                 internalServerError(call = call)
             }
@@ -272,6 +276,52 @@ private fun createUser(signup: Credentials, collection: Collection, userType: Us
 fun main(args: Array<String>) {
     BasicConfigurator.configure()
     embeddedServer(Netty, 8080, module = Application::module).start()
+}
+
+
+
+fun sendJobsOut(job: Job){
+    val restaurants = MongoDatabase.find<Restaurant>(Restaurant::_id eq job.restaurantId);
+    if (restaurants.isNotEmpty()) {
+        println("sending")
+        val users = MongoDatabase.find<User>()
+        val restaurantName = restaurants.first().name
+        for (user in users) {
+            user.fcmTokens.forEach {
+                if(user.userType == UserType.Worker.num) {
+                    println(it)
+                    sendFirebaseNotification(
+                        registrationToken = it,
+                        notificationTitle = "New Job Available",
+                        notificationMessage = "Please open your app to see new job available at $restaurantName"
+                    )
+                }
+            }
+        }
+
+    }
+}
+
+fun sendFirebaseNotification(registrationToken: String, notificationTitle: String = "", notificationMessage: String = "", data: Map<String, String>? = null) {
+
+    val key = "key= AAAARV140IQ:APA91bG4khwUnHSpOHOqkOWYNGt0QaOn3-ZVUrXtnI6LgTyZRoakAcM9bNlsGAaVUJ45PrJ5bQbHQCOcgPYUnpAB-fO6bgA7nt0V0lanYvGGORWo-W7zob5rGXdH2-RQOsCeOBOY4GMg"
+    val response = httpPost {
+        url("https://fcm.googleapis.com/fcm/send")
+
+        header { "Authorization" to key }
+
+        body { json ("""{ 
+                                    "notification": {
+                                                        "title": "$notificationTitle",
+                                                        "text": "$notificationMessage",
+                                                    },
+                                    "to" : "$registrationToken"
+                                }""")
+            }
+        }
+
+    println("Successfully sent message: $response")
+
 }
 
 
