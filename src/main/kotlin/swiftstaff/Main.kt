@@ -132,6 +132,22 @@ fun Application.module() {
             }
         }
 
+        get("/api/v1/profile/worker") {
+            println("handle worker profile request")
+
+            val workerIdentity = call.receive<UserIdentity>()
+            println("received user identity")
+            val workers = MongoDatabase.find<Worker>(Worker::_id eq workerIdentity::userId)
+            println("found worker")
+            println(workers.size)
+
+            if (workers.isNotEmpty()) {
+                val worker = workers.first()
+                call.respond(status = HttpStatusCode.OK, message = worker)
+            } else {
+                call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
+            }
+        }
 
         post("/api/v1/login") {
             println("enter user")
