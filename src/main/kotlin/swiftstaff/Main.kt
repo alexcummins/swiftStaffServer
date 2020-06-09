@@ -132,6 +132,24 @@ fun Application.module() {
             }
         }
 
+        get("/api/v1/profile/restaurant") {
+
+            println("handle restaurant profile request")
+
+            val restaurantIdentity = call.receive<RestaurantIdentity>()
+            println("received restaurant identity")
+            val restaurant = MongoDatabase.find<Restaurant>(Restaurant::_id
+                    eq restaurantIdentity::restaurantId)
+            println("found restaurant")
+
+            if (restaurant.isEmpty()) {
+                call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
+            } else {
+                call.respond(status = HttpStatusCode.OK, message = restaurant
+                        .first())
+            }
+        }
+
 
         post("/api/v1/login") {
             println("enter user")
