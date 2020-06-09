@@ -1,7 +1,6 @@
 package swiftstaff
 
 import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.google.maps.GeoApiContext
 import com.google.maps.GeocodingApi
 import io.ktor.application.Application
@@ -290,9 +289,14 @@ private fun addressToLatLong(address:String) : Pair<Double, Double> {
             .build();
     val results = GeocodingApi.geocode(context,
             address).await()
-    val fstResult = results[0].geometry.location;
-    val latLng = Pair<Double, Double>(fstResult.lat,fstResult.lng)
-    return latLng
+    return if(results.isNotEmpty()){
+        val fstResult = results[0].geometry.location;
+        Pair(fstResult.lat,fstResult.lng)
+    } else {
+        Pair<Double, Double>(0.0,0.0)
+
+    }
+
 }
 
 
