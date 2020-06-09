@@ -36,6 +36,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.3.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
     implementation(group = "io.github.rybalkinsd", name = "kohttp", version = "0.12.0")
+    implementation("com.google.maps:google-maps-services:0.14.0")
+
 }
 
 sourceSets.getByName("test") {

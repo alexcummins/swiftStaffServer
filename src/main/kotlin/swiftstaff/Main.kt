@@ -1,6 +1,8 @@
 package swiftstaff
 
 import com.google.gson.Gson
+import com.google.maps.GeoApiContext
+import com.google.maps.GeocodingApi
 import io.ktor.application.Application
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
@@ -94,18 +96,21 @@ fun Application.module() {
 
         post("/api/v1/signup/restaurant") {
             val signup = call.receive<SignupRestaurant>()
+            val latLng = addressToLatLong(signup.address)
             val restaurant = Restaurant(
                 name = signup.name,
                 phone = signup.phone,
                 restaurantEmailAddress = signup.restaurantEmailAddress,
-                address = signup.address
+                address = signup.address,
+                latitude = latLng.first,
+                longitude = latLng.second
             )
             val success = MongoDatabase.insert(restaurant)
             if (success) {
                 val user = createUser(signup, restaurant, UserType.Restaurant)
                 val success = MongoDatabase.insert(user)
                 if (success){
-                    call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id))
+                    call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id, "restaurantId" to restaurant._id))
                 } else {
                     call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
                 }
@@ -296,6 +301,21 @@ fun main(args: Array<String>) {
     embeddedServer(Netty, 8080, module = Application::module).start()
 }
 
+private fun addressToLatLong(address:String) : Pair<Double, Double> {
+    val context = GeoApiContext.Builder()
+            .apiKey("AIzaSyBxlhtrrP5NhGfbshE6hZVThra8_8MhC2g")
+            .build();
+    val results = GeocodingApi.geocode(context,
+            address).await()
+    return if(results.isNotEmpty()){
+        val fstResult = results[0].geometry.location;
+        Pair(fstResult.lat,fstResult.lng)
+    } else {
+        Pair<Double, Double>(0.0,0.0)
+
+    }
+
+}
 
 
 fun sendJobsOut(job: Job){
@@ -339,7 +359,6 @@ fun sendFirebaseNotification(registrationToken: String, notificationTitle: Strin
         }
 
     println("Successfully sent message: $response")
-
 }
 
 
