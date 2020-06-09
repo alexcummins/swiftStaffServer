@@ -321,7 +321,6 @@ fun sendFirebaseNotification(registrationToken: String, notificationTitle: Strin
         }
 
     println("Successfully sent message: $response")
-
 }
 
 

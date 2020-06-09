@@ -20,7 +20,7 @@ jobs:
     - stage: Unit test
       script: ./gradlew test
     - stage: Deploy
-      script: curl --request PATCH http://178.62.102.69:3000/deploy
+      script: curl --request PATCH http://139.59.200.194:3000/deploy
 
 before_script:
   - sleep 12
