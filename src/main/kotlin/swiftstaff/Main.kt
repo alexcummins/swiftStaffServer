@@ -139,14 +139,28 @@ fun Application.module() {
             }
         }
 
-        get("/api/v1/profile/worker") {
-            println("handle worker profile request")
+        post("/api/v1/profile/worker") {
+            println("Handle worker profile request")
 
             val workerIdentity = call.receive<UserIdentity>()
-            println("received user identity")
-            val workers = MongoDatabase.find<Worker>(Worker::_id eq workerIdentity::userId)
-            println("found worker")
-            println(workers.size)
+            println("Received user identity")
+
+//            val profile = Worker(
+//                    _id = "2",
+//                    fName = "Mike",
+//                    lName = "Doe",
+//                    phone = 79999999,
+//                    dob = "01/01/2020",
+//                    personalStatement = "I love eggs",
+//                    qualificationIds = mutableListOf(),
+//                    expertiseIds = mutableListOf(),
+//                    rating = 5.0,
+//                    imageIds =  mutableListOf()
+//            )
+            println("WorkersSize: " + MongoDatabase.db.getCollection("worker").countDocuments())
+
+            val workers = MongoDatabase.find<Worker>(Worker::_id eq workerIdentity.userId)
+            println("Found Workers:" + workers.size)
 
             if (workers.isNotEmpty()) {
                 val worker = workers.first()
