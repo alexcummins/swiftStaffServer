@@ -110,7 +110,7 @@ fun Application.module() {
                 val user = createUser(signup, restaurant, UserType.Restaurant)
                 val success = MongoDatabase.insert(user)
                 if (success){
-                    call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id))
+                    call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id, "restaurantId" to restaurant._id))
                 } else {
                     call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
                 }
