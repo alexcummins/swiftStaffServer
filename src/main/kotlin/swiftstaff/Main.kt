@@ -32,6 +32,7 @@ import swiftstaff.api.v1.*
 import io.github.rybalkinsd.kohttp.dsl.httpPost
 import io.github.rybalkinsd.kohttp.ext.url
 import org.apache.log4j.BasicConfigurator
+import swiftstaff.MongoDatabase.insert
 
 // Main server
 fun Application.module() {
@@ -137,15 +138,13 @@ fun Application.module() {
             }
         }
 
-        get("/api/v1/profile/restaurant") {
-
-            println("handle restaurant profile request")
+        post("/api/v1/profile/restaurant") {
+            println("Handle restaurant profile request")
 
             val restaurantIdentity = call.receive<RestaurantIdentity>()
             println("received restaurant identity")
-            val restaurant = MongoDatabase.find<Restaurant>(Restaurant::_id
-                    eq restaurantIdentity::restaurantId)
-            println("found restaurant")
+
+            val restaurant = MongoDatabase.find<Restaurant>(Restaurant::_id eq restaurantIdentity.restaurantId)
 
             if (restaurant.isEmpty()) {
                 call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)

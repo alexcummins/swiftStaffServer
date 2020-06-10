@@ -14,9 +14,12 @@ object MongoDatabase :  Database {
     val db: MongoDatabase
 
     init {
-        val username: String = System.getenv("DB_USERNAME") ?: "mongoadmin"
-        val password: String = System.getenv("DB_PASSWORD") ?: "mongoadmin"
-        val server: String = System.getenv("SERVER_ADDRESS") ?: "127.0.0.1"
+//        val username: String = System.getenv("DB_USERNAME") ?: "mongoadmin"
+//        val password: String = System.getenv("DB_PASSWORD") ?: "mongoadmin"
+//        val server: String = System.getenv("SERVER_ADDRESS") ?: "127.0.0.1"
+        val username: String = System.getenv("DB_USERNAME") ?: "superuser"
+        val password: String = System.getenv("DB_PASSWORD") ?: "changeToAStrongPassword"
+        val server: String = System.getenv("SERVER_ADDRESS") ?: "localhost:27017"
         val databaseName: String = System.getenv("DATABASE") ?: "test"
         this.connectionString = ConnectionString("mongodb://$username:$password@$server")
         this.mongoClient = KMongo.createClient(connectionString)

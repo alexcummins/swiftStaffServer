@@ -82,3 +82,15 @@ data class RestaurantIdentity(
         val restaurantId: String
 )
 
+//data class RestaurantProfile(
+//    val name: String,
+//    val address: String,
+//    val phone: Long,
+//    val email: String,
+//    val longitude: Double,
+//    val latitude: Double,
+//    val backgroundImage: String,
+//    val facebookLink: String,
+//    val twitterLink: String,
+//    val instagramLink: String
+//)
