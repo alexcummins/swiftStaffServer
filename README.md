@@ -55,6 +55,25 @@ db.jobs.find( {} )
 
 Which shows all jobs in jobs database.
 
+You need to add a user:
+
+https://docs.mongodb.com/manual/reference/method/db.createUser/
+
+Make sure mongo daemon is running
+
+```
+mongod
+mongo
+use admin
+db.createUser(
+      {
+          user: "mongoadmin",
+          pwd: "mongoadmin",
+          roles: [ "root" ]
+      }
+  )
+```
+
 
 
 
