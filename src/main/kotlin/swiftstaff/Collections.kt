@@ -16,8 +16,8 @@ data class Worker(
     val qualificationIds: MutableList<String> = mutableListOf(),
     val credentials: MutableList<String> = mutableListOf(),
     val expertiseIds: MutableList<Int> = mutableListOf(),
-    val ratingTotal: Int = 5,
-    val ratingCount: Int = 1,
+    var ratingTotal: Double = 0.0,
+    var ratingCount: Int = 0,
     val imageIds: MutableList<String> = mutableListOf()
 ) : Collection
 
