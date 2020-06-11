@@ -141,16 +141,44 @@ fun Application.module() {
         post("/api/v1/profile/restaurant") {
             println("Handle restaurant profile request")
 
+            val testRestaurant = Restaurant(
+                    name = "Eastside Cafe",
+                    address = "Princes Gardens, London, SW72AZ",
+//                    phone = 2569984529,
+                    restaurantEmailAddress = "eastsidecafe.com",
+                    longitude = 51.499014,
+                    latitude = -0.172002,
+                    facebookLink = "https://www.facebook.com/EastsideBar/",
+                    twitterLink = "https://twitter.com/eastsidecafe?",
+                    instagramLink = "https://www.instagram.com/eastsidecafe/?hl=en"
+            )
+            MongoDatabase.insert(testRestaurant)
+
             val restaurantIdentity = call.receive<RestaurantIdentity>()
             println("received restaurant identity")
 
-            val restaurant = MongoDatabase.find<Restaurant>(Restaurant::_id eq restaurantIdentity.restaurantId)
+            val restaurants = MongoDatabase.find<Restaurant>(Restaurant::_id
+                    eq restaurantIdentity.restaurantId)
 
-            if (restaurant.isEmpty()) {
-                call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
+
+
+            if (restaurants.isNotEmpty()) {
+                val restaurant = restaurants.first()
+                val restaurantProfile = RestaurantProfile(
+                        restaurantId = restaurant._id.orEmpty(),
+                        name = restaurant.name,
+                        email = restaurant.restaurantEmailAddress,
+                        address = restaurant.address,
+                        phone = restaurant.phone,
+                        longitude = restaurant.longitude,
+                        latitude = restaurant.latitude,
+                        backgroundImage = "",
+                        facebookLink = restaurant.facebookLink,
+                        twitterLink = restaurant.twitterLink,
+                        instagramLink = restaurant.instagramLink)
+                call.respond(status = HttpStatusCode.OK, message = restaurantProfile)
             } else {
-                call.respond(status = HttpStatusCode.OK, message = restaurant
-                        .first())
+                call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
             }
         }
 
