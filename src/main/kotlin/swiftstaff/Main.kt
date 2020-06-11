@@ -29,7 +29,11 @@ import org.litote.kmongo.eq
 import swiftstaff.api.v1.*
 import io.github.rybalkinsd.kohttp.dsl.httpPost
 import io.github.rybalkinsd.kohttp.ext.url
+import io.ktor.response.respondFile
 import org.apache.log4j.BasicConfigurator
+import java.awt.Image
+
+import java.io.File
 
 // Main server
 fun Application.module() {
@@ -138,18 +142,6 @@ fun Application.module() {
             val workerIdentity = call.receive<UserIdentity>()
             println("Received user identity")
 
-//            val profile = Worker(
-//                    _id = "2",
-//                    fName = "Mike",
-//                    lName = "Doe",
-//                    phone = 79999999,
-//                    dob = "01/01/2020",
-//                    personalStatement = "I love eggs",
-//                    qualificationIds = mutableListOf(),
-//                    expertiseIds = mutableListOf(),
-//                    rating = 5.0,
-//                    imageIds =  mutableListOf()
-//            )
             println("WorkersSize: " + MongoDatabase.db.getCollection("worker").countDocuments())
 
             val workers = MongoDatabase.find<Worker>(Worker::_id eq workerIdentity.userId)
@@ -157,10 +149,50 @@ fun Application.module() {
 
             if (workers.isNotEmpty()) {
                 val worker = workers.first()
-                call.respond(status = HttpStatusCode.OK, message = worker)
+                val workerProfile = WorkerProfile(
+                        userId = worker._id.orEmpty(),
+                        fName = worker.fName,
+                        lName = worker.lName,
+                        phone = worker.phone,
+                        address = " ",
+                        skillsAndQualities = MutableList(3) { _ -> "Test" },
+                        experience = MutableList(3) { _ -> "Test" },
+                        personalStatement = worker.personalStatement,
+                        ratingTotal = worker.ratingTotal,
+                        ratingCount = worker.ratingCount)
+                        call.respond(status = HttpStatusCode.OK, message = workerProfile)
             } else {
                 call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
             }
+        }
+
+        get("/api/v1/downloads/{resourceName}/{imageId}") {
+            val resourceName = call.parameters["resourceName"].orEmpty()
+            val imageId = call.parameters["imageId"].orEmpty()
+
+            println("Uploading Test image")
+            val objectId = MongoDatabase.upload("2", resourceName)
+            println(objectId)
+            println("Uploaded Image")
+
+            println("Requesting image download")
+            MongoDatabase.download(objectId, resourceName)
+            val image = File("dbuffer/$resourceName.jpg")
+
+            image.parentFile.mkdirs()
+            image.createNewFile()
+
+            if (image.exists()) {
+                call.respondFile(image)
+            } else {
+                call.respond(HttpStatusCode.NotFound)
+            }
+        }
+
+        post("/api/v1/uploads") {
+
+
+
         }
 
         post("/api/v1/login") {
