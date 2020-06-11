@@ -335,6 +335,15 @@ fun Application.module() {
                                 }
                             }
 
+                            if(text.startsWith("restaurantId: ")){
+                                val restaurantId = RestaurantId(text.removePrefix("restaurantId: "))
+                                val jobsList: MutableList<JobResponseForRestaurant> = openJobsForRestaurant(restaurantId = restaurantId)
+                                if (jobsList.isNotEmpty()) {
+                                    val gson = Gson()
+                                    outgoing.send(Frame.Text(gson.toJson(JobsForRestaurant(jobsList.size, jobsList))))
+                                }
+                            }
+
                             if (text.equals("bye", ignoreCase = true)) {
                                 close(CloseReason(CloseReason.Codes.NORMAL, "Client said BYE"))
                             }
@@ -452,6 +461,28 @@ private fun openJobsForWorker(workerId: WorkerId):  MutableList<JobResponse> {
         }
         jobsList.add(jobResponse)
 
+    }
+    return jobsList
+}
+
+
+private fun openJobsForRestaurant(restaurantId: RestaurantId):  MutableList<JobResponseForRestaurant> {
+    val jobs = MongoDatabase.find<Job>(Job::restaurantId eq restaurantId.restaurantId)
+    val jobsList: MutableList<JobResponseForRestaurant> = mutableListOf()
+    jobs.forEach {
+        val workers = mutableSetOf<Worker>()
+        it.reviewList.forEach { inner ->
+            val worker = MongoDatabase.find<Worker>(WorkerId::workerId eq inner)
+            if(worker.isNotEmpty()){
+                workers.addAll(worker)
+            }
+        }
+        val jobsResponseForRestaurant = if (workers.isNotEmpty()) {
+            JobResponseForRestaurant(job = it, workers = workers.toMutableList())
+        } else {
+            JobResponseForRestaurant(job = it, workers = mutableListOf())
+        }
+        jobsList.add(jobsResponseForRestaurant)
     }
     return jobsList
 }

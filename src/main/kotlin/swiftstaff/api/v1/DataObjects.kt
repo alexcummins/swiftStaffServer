@@ -2,6 +2,7 @@ package swiftstaff.api.v1
 
 import swiftstaff.Job
 import swiftstaff.Restaurant
+import swiftstaff.Worker
 
 enum class UserType (val num: Int) {
     Restaurant(1),
@@ -79,6 +80,11 @@ data class JobResponse(
         val restaurant: Restaurant
 )
 
+data class JobResponseForRestaurant(
+        val job: Job,
+        val workers: MutableList<Worker>
+)
+
 data class UserIdentity(
         val userId: String,
         val userType: Int
@@ -105,6 +111,11 @@ data class UploadInfo(
 data class WorkerId(
         val workerId: String
 )
+
+data class RestaurantId(
+        val restaurantId: String
+)
+
 
 data class NewWorkerRating(
     val userId: String,
