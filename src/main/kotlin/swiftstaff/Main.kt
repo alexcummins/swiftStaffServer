@@ -78,11 +78,11 @@ fun Application.module() {
             val signup = call.receive<SignupWorker>()
             println("Worker Signup correctly recieved")
             val worker = Worker(
-                fName = signup.fName,
-                lName = signup.lName,
-                phone = signup.phone,
-                credentials = signup.credentials,
-                dob = signup.dob
+                    fName = signup.fName,
+                    lName = signup.lName,
+                    phone = signup.phone,
+                    credentials = signup.credentials,
+                    dob = signup.dob
             )
             println("Worker class created")
 
@@ -118,12 +118,12 @@ fun Application.module() {
             val signup = call.receive<SignupRestaurant>()
             val latLng = addressToLatLong(signup.address)
             val restaurant = Restaurant(
-                name = signup.name,
-                phone = signup.phone,
-                restaurantEmailAddress = signup.restaurantEmailAddress,
-                address = signup.address,
-                latitude = latLng.first,
-                longitude = latLng.second
+                    name = signup.name,
+                    phone = signup.phone,
+                    restaurantEmailAddress = signup.restaurantEmailAddress,
+                    address = signup.address,
+                    latitude = latLng.first,
+                    longitude = latLng.second
             )
             val success = MongoDatabase.insert(restaurant)
             if (success) {
@@ -131,8 +131,8 @@ fun Application.module() {
                 val success = MongoDatabase.insert(user)
                 if (success) {
                     call.respond(
-                        status = HttpStatusCode.Created,
-                        message = mapOf("id" to user._id, "restaurantId" to restaurant._id)
+                            status = HttpStatusCode.Created,
+                            message = mapOf("id" to user._id, "restaurantId" to restaurant._id)
                     )
                 } else {
                     call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
@@ -209,6 +209,37 @@ fun Application.module() {
             }
         }
 
+        post("/api/v1/profile/restaurant") {
+            println("Handle restaurant profile request")
+
+            val restaurantIdentity = call.receive<RestaurantId>()
+            println("received restaurant identity")
+
+            val restaurants = MongoDatabase.find<Restaurant>(Restaurant::_id
+                    eq restaurantIdentity.restaurantId)
+
+
+            if (restaurants.isNotEmpty()) {
+                val restaurant = restaurants.first()
+                val restaurantProfile = RestaurantProfile(
+                        restaurantId = restaurant._id.orEmpty(),
+                        name = restaurant.name,
+                        email = restaurant.restaurantEmailAddress,
+                        address = restaurant.address,
+                        phone = restaurant.phone,
+                        longitude = restaurant.longitude,
+                        latitude = restaurant.latitude,
+                        backgroundImage = "",
+                        facebookLink = restaurant.facebookLink,
+                        twitterLink = restaurant.twitterLink,
+                        instagramLink = restaurant.instagramLink)
+                call.respond(status = HttpStatusCode.OK, message = restaurantProfile)
+            } else {
+                call.respond(message = "Internal Server Error", status =
+                HttpStatusCode.InternalServerError)
+            }
+        }
+
         get("/api/v1/downloads/{resourceName}/{imageId}") {
             val resourceName = call.parameters["resourceName"].orEmpty()
             val imageId = call.parameters["imageId"].orEmpty()
@@ -266,14 +297,14 @@ fun Application.module() {
                         if (workerObj.isNotEmpty()) {
                             val worker = workerObj.first()
                             val responseObject = LoginWorkerResponse(
-                                userId = user._id.orEmpty(),
-                                workerId = worker._id.orEmpty(),
-                                userType = user.userType,
-                                email = user.email,
-                                fName = worker.fName,
-                                lName = worker.lName,
-                                phone = worker.phone,
-                                signUpFinished = user.signUpFinished
+                                    userId = user._id.orEmpty(),
+                                    workerId = worker._id.orEmpty(),
+                                    userType = user.userType,
+                                    email = user.email,
+                                    fName = worker.fName,
+                                    lName = worker.lName,
+                                    phone = worker.phone,
+                                    signUpFinished = user.signUpFinished
                             )
                             call.respond(status = HttpStatusCode.OK, message = responseObject)
                         } else {
@@ -284,16 +315,16 @@ fun Application.module() {
                         if (restaurantObj.isNotEmpty()) {
                             val restaurant = restaurantObj.first()
                             val responseObject = LoginRestaurantResponse(
-                                userId = user._id.orEmpty(),
-                                userType = user.userType,
-                                email = user.email,
-                                fName = "",
-                                lName = "",
-                                restaurantPhone = restaurant.phone,
-                                restaurantName = restaurant.name,
-                                restaurantEmail = restaurant.restaurantEmailAddress,
-                                signUpFinished = user.signUpFinished,
-                                restaurantId = restaurant._id.orEmpty()
+                                    userId = user._id.orEmpty(),
+                                    userType = user.userType,
+                                    email = user.email,
+                                    fName = "",
+                                    lName = "",
+                                    restaurantPhone = restaurant.phone,
+                                    restaurantName = restaurant.name,
+                                    restaurantEmail = restaurant.restaurantEmailAddress,
+                                    signUpFinished = user.signUpFinished,
+                                    restaurantId = restaurant._id.orEmpty()
                             )
                             call.respond(status = HttpStatusCode.OK, message = responseObject)
                         } else {
@@ -427,14 +458,14 @@ fun Application.module() {
             workers.forEach { workerIds.add(it._id!!) }
 
             val job = Job(
-                restaurantId = newJob.restaurantId,
-                hourlyRate = newJob.hourlyRate,
-                credentials = newJob.credentials,
-                sentList = workerIds.toMutableList(),
-                startTime = newJob.startTime,
-                endTime = newJob.endTime,
-                date = newJob.date,
-                extraInfo = newJob.extraInfo
+                    restaurantId = newJob.restaurantId,
+                    hourlyRate = newJob.hourlyRate,
+                    credentials = newJob.credentials,
+                    sentList = workerIds.toMutableList(),
+                    startTime = newJob.startTime,
+                    endTime = newJob.endTime,
+                    date = newJob.date,
+                    extraInfo = newJob.extraInfo
             )
             val success = MongoDatabase.insert(job)
             updateWebSockets(wsConnections)
@@ -506,11 +537,11 @@ private fun createUser(signup: Credentials, collection: Collection, userType: Us
     println("About to return user class")
 
     return User(
-        email = signup.email,
-        passwordHash = passwordHash,
-        salt = salt,
-        userType = userType.num,
-        foreignTableId = collection._id!!
+            email = signup.email,
+            passwordHash = passwordHash,
+            salt = salt,
+            userType = userType.num,
+            foreignTableId = collection._id!!
     )
 }
 
@@ -521,11 +552,11 @@ fun main(args: Array<String>) {
 
 private fun addressToLatLong(address: String): Pair<Double, Double> {
     val context = GeoApiContext.Builder()
-        .apiKey("AIzaSyBxlhtrrP5NhGfbshE6hZVThra8_8MhC2g")
-        .build();
+            .apiKey("AIzaSyBxlhtrrP5NhGfbshE6hZVThra8_8MhC2g")
+            .build();
     val results = GeocodingApi.geocode(
-        context,
-        address
+            context,
+            address
     ).await()
     return if (results.isNotEmpty()) {
         val fstResult = results[0].geometry.location;
@@ -549,9 +580,9 @@ fun sendJobsOut(job: Job) {
                 if (user.userType == UserType.Worker.num) {
                     println(it)
                     sendFirebaseNotification(
-                        registrationToken = it,
-                        notificationTitle = "New Job Available",
-                        notificationMessage = "Please open your app to see new job available at $restaurantName"
+                            registrationToken = it,
+                            notificationTitle = "New Job Available",
+                            notificationMessage = "Please open your app to see new job available at $restaurantName"
                     )
                 }
             }
@@ -561,14 +592,14 @@ fun sendJobsOut(job: Job) {
 }
 
 fun sendFirebaseNotification(
-    registrationToken: String,
-    notificationTitle: String = "",
-    notificationMessage: String = "",
-    data: Map<String, String>? = null
+        registrationToken: String,
+        notificationTitle: String = "",
+        notificationMessage: String = "",
+        data: Map<String, String>? = null
 ) {
 
     val key =
-        "key= AAAARV140IQ:APA91bG4khwUnHSpOHOqkOWYNGt0QaOn3-ZVUrXtnI6LgTyZRoakAcM9bNlsGAaVUJ45PrJ5bQbHQCOcgPYUnpAB-fO6bgA7nt0V0lanYvGGORWo-W7zob5rGXdH2-RQOsCeOBOY4GMg"
+            "key= AAAARV140IQ:APA91bG4khwUnHSpOHOqkOWYNGt0QaOn3-ZVUrXtnI6LgTyZRoakAcM9bNlsGAaVUJ45PrJ5bQbHQCOcgPYUnpAB-fO6bgA7nt0V0lanYvGGORWo-W7zob5rGXdH2-RQOsCeOBOY4GMg"
     val response = httpPost {
         url("https://fcm.googleapis.com/fcm/send")
 
@@ -576,7 +607,7 @@ fun sendFirebaseNotification(
 
         body {
             json(
-                """{ 
+                    """{ 
                                     "notification": {
                                                         "title": "$notificationTitle",
                                                         "text": "$notificationMessage",
@@ -589,6 +620,5 @@ fun sendFirebaseNotification(
 
     println("Successfully sent message: $response")
 }
-
 
 

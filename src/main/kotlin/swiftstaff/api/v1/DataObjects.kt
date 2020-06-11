@@ -15,54 +15,54 @@ interface Credentials {
 }
 
 data class SignupWorker(
-    override val email: String,
-    override val password: String,
-    val fName: String,
-    val lName: String,
-    val credentials: MutableList<String>,
-    val phone: Long,
-    val dob: String
+        override val email: String,
+        override val password: String,
+        val fName: String,
+        val lName: String,
+        val credentials: MutableList<String>,
+        val phone: Long,
+        val dob: String
 ) : Credentials
 
 data class SignupRestaurant(
-    override val email: String,
-    override val password: String,
-    val name: String,
-    val address: String,
-    val phone: Long,
-    val restaurantEmailAddress: String
+        override val email: String,
+        override val password: String,
+        val name: String,
+        val address: String,
+        val phone: Long,
+        val restaurantEmailAddress: String
 ) : Credentials
 
 data class LoginAttempt(
-    override val email: String,
-    override val password: String,
-    val fcmToken: String
+        override val email: String,
+        override val password: String,
+        val fcmToken: String
 ) : Credentials
 
 
 data class LoginWorkerResponse(
-    val userId: String,
-    val workerId: String,
-    val userType: Int,
-    val email: String,
-    val fName: String,
-    val lName: String,
-    val phone: Long,
-    val signUpFinished: Boolean
+        val userId: String,
+        val workerId: String,
+        val userType: Int,
+        val email: String,
+        val fName: String,
+        val lName: String,
+        val phone: Long,
+        val signUpFinished: Boolean
 )
 
 
 data class LoginRestaurantResponse(
-    val userId: String,
-    val userType: Int,
-    val email: String,
-    val restaurantEmail: String,
-    val restaurantName: String,
-    val restaurantPhone: Long,
-    val fName: String,
-    val lName: String,
-    val signUpFinished: Boolean,
-    val restaurantId: String
+        val userId: String,
+        val userType: Int,
+        val email: String,
+        val restaurantEmail: String,
+        val restaurantName: String,
+        val restaurantPhone: Long,
+        val fName: String,
+        val lName: String,
+        val signUpFinished: Boolean,
+        val restaurantId: String
 )
 
 data class NewJobRequest(
@@ -116,14 +116,27 @@ data class RestaurantId(
         val restaurantId: String
 )
 
+data class RestaurantProfile(
+        val restaurantId: String,
+        val name: String,
+        val address: String,
+        val phone: Long,
+        val email: String,
+        val longitude: Double,
+        val latitude: Double,
+        val backgroundImage: String,
+        val facebookLink: String,
+        val twitterLink: String,
+        val instagramLink: String
+)
+
 
 data class NewWorkerRating(
-    val userId: String,
-    val newRating: Double
+        val userId: String,
+        val newRating: Double
 )
 data class WorkerPatch(
         val jobId: String,
         val workerId: String,
         val commandId: Int
 )
-
