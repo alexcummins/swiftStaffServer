@@ -41,6 +41,7 @@ data class LoginAttempt(
 
 data class LoginWorkerResponse(
     val userId: String,
+    val workerId: String,
     val userType: Int,
     val email: String,
     val fName: String,

@@ -89,12 +89,12 @@ fun Application.module() {
                     println("Responding")
 
                 } else {
-                    println("User unsuccesful")
+                    println("User unsuccessful")
 
                     internalServerError(call = call)
                 }
             } else {
-                println("worker unsucessful")
+                println("worker unsuccessful")
 
                 internalServerError(call = call)
             }
@@ -131,20 +131,9 @@ fun Application.module() {
         // Get jobs based on your userId
         get("/api/v1/jobs") {
             val workerId = call.receive<WorkerId>()
-            val jobs = MongoDatabase.find<Job>(Filters.`in`("sentList", workerId.workerId))
-            val jobsList: MutableList<JobResponse> = mutableListOf()
-            jobs.forEach {
-                val restaurant = MongoDatabase.find<Restaurant>(Restaurant::_id eq it.restaurantId)
-                val jobResponse = if (restaurant.isNotEmpty()) {
-                    JobResponse(job = it, restaurant = restaurant.first())
-                } else {
-                    JobResponse(job = it, restaurant = Restaurant())
-                }
-                jobsList.add(jobResponse)
-
-            }
-            if (jobs.isNotEmpty()) {
-                call.respond(status = HttpStatusCode.OK, message = Jobs(jobs.size, jobsList))
+            val  jobsList: MutableList<JobResponse> = openJobsForWorker(workerId)
+            if (jobsList.isNotEmpty()) {
+                call.respond(status = HttpStatusCode.OK, message = Jobs(jobsList.size, jobsList))
             } else {
                 call.respond(status = HttpStatusCode.NotFound, message = "No jobs found")
             }
@@ -179,6 +168,7 @@ fun Application.module() {
                             val worker = workerObj.first()
                             val responseObject = LoginWorkerResponse(
                                 userId = user._id.orEmpty(),
+                                workerId = worker._id.orEmpty(),
                                 userType = user.userType,
                                 email = user.email,
                                 fName = worker.fName,
@@ -221,6 +211,7 @@ fun Application.module() {
             }
 
         }
+
         webSocket("/api/v1/jobs") { // websocketSession
             for (frame in incoming) {
                 try {
@@ -231,20 +222,13 @@ fun Application.module() {
                         is Frame.Text -> {
                             val text = frame.readText()
                             println(text)
-                            val jobs = MongoDatabase.find<Job>()
-                            val jobsList: MutableList<JobResponse> = mutableListOf()
-                            jobs.forEach {
-                                val restaurant = MongoDatabase.find<Restaurant>(Restaurant::_id eq it.restaurantId)
-                                val jobResponse = if (restaurant.isNotEmpty()) {
-                                    JobResponse(job = it, restaurant = restaurant.first())
-                                } else {
-                                    JobResponse(job = it, restaurant = Restaurant())
+                            if(text.startsWith("workerId: ")){
+                                val workerId = WorkerId(text.removePrefix("workerID:"))
+                                val jobsList: MutableList<JobResponse> = openJobsForWorker(workerId = workerId)
+                                if (jobsList.isNotEmpty()) {
+                                    val gson = Gson()
+                                    outgoing.send(Frame.Text(gson.toJson(Jobs(jobsList.size, jobsList))))
                                 }
-                                jobsList.add(jobResponse)
-                            }
-                            if (jobs.isNotEmpty()) {
-                                val gson = Gson()
-                                outgoing.send(Frame.Text(gson.toJson(Jobs(jobs.size, jobsList))))
                             }
 
                             if (text.equals("bye", ignoreCase = true)) {
@@ -291,6 +275,22 @@ fun Application.module() {
             }
         }
     }
+}
+
+private fun openJobsForWorker(workerId: WorkerId):  MutableList<JobResponse> {
+    val jobs = MongoDatabase.find<Job>(Filters.`in`("sentList", workerId.workerId))
+    val jobsList: MutableList<JobResponse> = mutableListOf()
+    jobs.forEach {
+        val restaurant = MongoDatabase.find<Restaurant>(Restaurant::_id eq it.restaurantId)
+        val jobResponse = if (restaurant.isNotEmpty()) {
+            JobResponse(job = it, restaurant = restaurant.first())
+        } else {
+            JobResponse(job = it, restaurant = Restaurant())
+        }
+        jobsList.add(jobResponse)
+
+    }
+    return jobsList
 }
 
 private suspend fun internalServerError(message: String = "Internal Server Error", call: ApplicationCall) {
