@@ -38,6 +38,7 @@ import org.apache.log4j.BasicConfigurator
 import org.bson.conversions.Bson
 import org.litote.kmongo.MongoOperator.`in`
 import org.litote.kmongo.`in`
+import io.ktor.response.respondFile
 import java.awt.Image
 
 import java.io.File
@@ -140,6 +141,59 @@ fun Application.module() {
                 call.respond(status = HttpStatusCode.OK, message = Jobs(jobsList.size, jobsList))
             } else {
                 call.respond(status = HttpStatusCode.NotFound, message = "No jobs found")
+            }
+        }
+
+        post("/api/v1/profile/worker") {
+            println("Handle worker profile request")
+
+            val workerIdentity = call.receive<UserIdentity>()
+            println("Received user identity")
+
+            println("WorkersSize: " + MongoDatabase.db.getCollection("worker").countDocuments())
+
+            val workers = MongoDatabase.find<Worker>(Worker::_id eq workerIdentity.userId)
+            println("Found Workers:" + workers.size)
+
+            if (workers.isNotEmpty()) {
+                val worker = workers.first()
+                val workerProfile = WorkerProfile(
+                        userId = worker._id.orEmpty(),
+                        fName = worker.fName,
+                        lName = worker.lName,
+                        phone = worker.phone,
+                        address = " ",
+                        skillsAndQualities = MutableList(3) { _ -> "Test" },
+                        experience = MutableList(3) { _ -> "Test" },
+                        personalStatement = worker.personalStatement,
+                        ratingTotal = worker.ratingTotal,
+                        ratingCount = worker.ratingCount)
+                        call.respond(status = HttpStatusCode.OK, message = workerProfile)
+            } else {
+                call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
+            }
+        }
+
+        get("/api/v1/downloads/{resourceName}/{imageId}") {
+            val resourceName = call.parameters["resourceName"].orEmpty()
+            val imageId = call.parameters["imageId"].orEmpty()
+
+            println("Uploading Test image")
+            val objectId = MongoDatabase.upload("2", resourceName)
+            println(objectId)
+            println("Uploaded Image")
+
+            println("Requesting image download")
+            MongoDatabase.download(objectId, resourceName)
+            val image = File("dbuffer/$resourceName.jpg")
+
+            image.parentFile.mkdirs()
+            image.createNewFile()
+
+            if (image.exists()) {
+                call.respondFile(image)
+            } else {
+                call.respond(HttpStatusCode.NotFound)
             }
         }
 
