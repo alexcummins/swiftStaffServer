@@ -74,6 +74,17 @@ db.createUser(
   )
 ```
 
+To see current tables (eg: User table, Worker table):
+
+```
+show tables
+```
+
+And see whats in them with:
+
+```
+db.User.find({})
+```
 
 
 
