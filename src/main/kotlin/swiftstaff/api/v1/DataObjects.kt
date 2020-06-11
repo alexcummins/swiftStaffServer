@@ -93,7 +93,7 @@ data class WorkerProfile(
         val skillsAndQualities: MutableList<String>,
         val experience: MutableList<String>,
         val personalStatement: String,
-        val ratingTotal: Int,
+        val ratingTotal: Double,
         val ratingCount: Int
 )
 
@@ -106,6 +106,10 @@ data class WorkerId(
         val workerId: String
 )
 
+data class NewWorkerRating(
+    val userId: String,
+    val newRating: Double
+)
 data class WorkerPatch(
         val jobId: String,
         val workerId: String,
