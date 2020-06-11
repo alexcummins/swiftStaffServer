@@ -399,6 +399,7 @@ fun Application.module() {
                 extraInfo = newJob.extraInfo
             )
             val success = MongoDatabase.insert(job)
+            updateWebSockets(wsConnections)
             if (success) {
                 call.respond(status = Created, message = mapOf("id" to job._id))
                 sendJobsOut(job)
