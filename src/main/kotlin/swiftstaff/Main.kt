@@ -15,10 +15,6 @@ import io.ktor.features.DefaultHeaders
 import io.ktor.gson.gson
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.cio.websocket.CloseReason
-import io.ktor.http.cio.websocket.Frame
-import io.ktor.http.cio.websocket.close
-import io.ktor.http.cio.websocket.readText
 import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.get
@@ -33,16 +29,27 @@ import swiftstaff.api.v1.*
 import io.github.rybalkinsd.kohttp.dsl.httpPost
 import io.github.rybalkinsd.kohttp.ext.url
 import io.ktor.http.HttpStatusCode.Companion.Created
+import io.ktor.http.cio.websocket.*
 import io.ktor.response.respondFile
 import org.apache.log4j.BasicConfigurator
-import org.bson.conversions.Bson
-import org.litote.kmongo.MongoOperator.`in`
-import org.litote.kmongo.`in`
-import io.ktor.response.respondFile
-import java.awt.Image
-
+import io.ktor.routing.patch
 import java.io.File
+import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.LinkedHashSet
 
+enum class JobCommand(val num: Int){
+    WORKER_ACCEPT(1),
+    RESTAURANT_ACCEPT(2),
+    WORKER_DECLINE(3),
+    RESTAURANT_DECLINE(4)
+}
+
+class WorkerWS(val session: DefaultWebSocketSession) {
+    companion object { var lastId = AtomicInteger(0) }
+    val id = lastId.getAndIncrement()
+    var workerId = ""
+}
 // Main server
 fun Application.module() {
     install(DefaultHeaders)
@@ -197,59 +204,6 @@ fun Application.module() {
             }
         }
 
-        post("/api/v1/profile/worker") {
-            println("Handle worker profile request")
-
-            val workerIdentity = call.receive<UserIdentity>()
-            println("Received user identity")
-
-            println("WorkersSize: " + MongoDatabase.db.getCollection("worker").countDocuments())
-
-            val workers = MongoDatabase.find<Worker>(Worker::_id eq workerIdentity.userId)
-            println("Found Workers:" + workers.size)
-
-            if (workers.isNotEmpty()) {
-                val worker = workers.first()
-                val workerProfile = WorkerProfile(
-                        userId = worker._id.orEmpty(),
-                        fName = worker.fName,
-                        lName = worker.lName,
-                        phone = worker.phone,
-                        address = " ",
-                        skillsAndQualities = MutableList(3) { _ -> "Test" },
-                        experience = MutableList(3) { _ -> "Test" },
-                        personalStatement = worker.personalStatement,
-                        ratingTotal = worker.ratingTotal,
-                        ratingCount = worker.ratingCount)
-                        call.respond(status = HttpStatusCode.OK, message = workerProfile)
-            } else {
-                call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
-            }
-        }
-
-        get("/api/v1/downloads/{resourceName}/{imageId}") {
-            val resourceName = call.parameters["resourceName"].orEmpty()
-            val imageId = call.parameters["imageId"].orEmpty()
-
-            println("Uploading Test image")
-            val objectId = MongoDatabase.upload("2", resourceName)
-            println(objectId)
-            println("Uploaded Image")
-
-            println("Requesting image download")
-            MongoDatabase.download(objectId, resourceName)
-            val image = File("dbuffer/$resourceName.jpg")
-
-            image.parentFile.mkdirs()
-            image.createNewFile()
-
-            if (image.exists()) {
-                call.respondFile(image)
-            } else {
-                call.respond(HttpStatusCode.NotFound)
-            }
-        }
-
         post("/api/v1/uploads") {
 
 
@@ -328,7 +282,12 @@ fun Application.module() {
 
         }
 
+
+        val wsConnections = Collections.synchronizedSet(LinkedHashSet<WorkerWS>())
+
         webSocket("/api/v1/jobs") { // websocketSession
+            val workerWs = WorkerWS(this)
+            wsConnections += workerWs
             for (frame in incoming) {
                 try {
                     // We starts receiving messages (frames).
@@ -355,9 +314,63 @@ fun Application.module() {
                         }
                     }
                 } finally {
-                    // Either if there was an error, of it the connection was closed gracefully.
-                    // We notify the server that the member left.
+                    wsConnections -= workerWs
                 }
+            }
+        }
+
+        patch("/api/v1/jobs"){
+            val patchRequest = call.receive<WorkerPatch>()
+            val jobs = MongoDatabase.find<Job>(Job::_id eq patchRequest.jobId)
+            if(jobs.isNotEmpty()){
+                val job = jobs.first()
+                when (patchRequest.commandId){
+                    JobCommand.WORKER_ACCEPT.num -> {
+                        job.sentList.remove(patchRequest.workerId)
+                        job.reviewList.add(patchRequest.workerId)
+                        job.sentList = job.sentList.distinct().toMutableList()
+                        job.reviewList = job.reviewList.distinct().toMutableList()
+                        MongoDatabase.update(job, Job::_id eq job._id)
+                        val newJobs = openJobsForWorker(workerId = WorkerId(workerId = patchRequest.workerId))
+                        updateWebSockets(wsConnections)
+                        if (newJobs.isNotEmpty()) {
+                            call.respond(status = HttpStatusCode.OK, message = Jobs(newJobs.size, newJobs))
+                        } else {
+                            call.respond(status = HttpStatusCode.NotFound, message = "No jobs found")
+                        }
+                    }
+                    JobCommand.RESTAURANT_ACCEPT.num -> {
+                        job.status = 1
+                        job.workerId = patchRequest.workerId
+                        job.sentList = mutableListOf()
+                        job.reviewList = mutableListOf()
+                        MongoDatabase.update(job, Job::_id eq job._id)
+                        // Add restaurant job Response
+                    }
+                    JobCommand.WORKER_DECLINE.num -> {
+                        job.sentList.remove(patchRequest.workerId)
+                        job.reviewList.remove(patchRequest.workerId)
+                        job.sentList = job.sentList.distinct().toMutableList()
+                        job.reviewList = job.reviewList.distinct().toMutableList()
+                        MongoDatabase.update(job, Job::_id eq job._id)
+                        val newJobs = openJobsForWorker(workerId = WorkerId(workerId = patchRequest.workerId))
+                        updateWebSockets(wsConnections)
+                        if (newJobs.isNotEmpty()) {
+                            call.respond(status = HttpStatusCode.OK, message = Jobs(newJobs.size, newJobs))
+                        } else {
+                            call.respond(status = HttpStatusCode.NotFound, message = "No jobs found")
+                        }
+                    }
+                    JobCommand.RESTAURANT_DECLINE.num -> {
+                        job.sentList.remove(patchRequest.workerId)
+                        job.reviewList.remove(patchRequest.workerId)
+                        MongoDatabase.update(job, Job::_id eq job._id)
+                        // Add restaurant job Response
+                    }
+                }
+            } else {
+                call.respond(message = "Not Found", status = HttpStatusCode.NotFound)
+
             }
         }
 
@@ -393,8 +406,9 @@ fun Application.module() {
     }
 }
 
+
 private fun openJobsForWorker(workerId: WorkerId):  MutableList<JobResponse> {
-    val jobs = MongoDatabase.find<Job>(Filters.`in`("sentList", workerId.workerId))
+    val jobs = MongoDatabase.find<Job>(Filters.or(Filters.`in`("sentList", workerId.workerId) , Filters.`in`("reviewList", workerId.workerId)))
     val jobsList: MutableList<JobResponse> = mutableListOf()
     jobs.forEach {
         val restaurant = MongoDatabase.find<Restaurant>(Restaurant::_id eq it.restaurantId)
@@ -409,6 +423,11 @@ private fun openJobsForWorker(workerId: WorkerId):  MutableList<JobResponse> {
     return jobsList
 }
 
+private suspend fun updateWebSockets(wsConnections: MutableSet<WorkerWS>) {
+    wsConnections.forEach {
+        it.session.send("update")
+    }
+}
 private suspend fun internalServerError(message: String = "Internal Server Error", call: ApplicationCall) {
     return call.respond(message = message, status = HttpStatusCode.InternalServerError)
 }

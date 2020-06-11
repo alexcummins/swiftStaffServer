@@ -106,3 +106,9 @@ data class WorkerId(
         val workerId: String
 )
 
+data class WorkerPatch(
+        val jobId: String,
+        val workerId: String,
+        val commandId: Int
+)
+

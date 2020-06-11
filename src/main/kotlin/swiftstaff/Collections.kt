@@ -51,18 +51,18 @@ data class User(
 
 
 data class Job(
-    override val _id: String? = null,
-    val restaurantId: String = " ",
-    val workerId: String = " ",
-    val hourlyRate: String = "1075",
-    val status: Int = 0,
-    val credentials: MutableList<String> = mutableListOf(),
-    val sentList: MutableList<String> = mutableListOf(),
-    val reviewList: MutableList<String> = mutableListOf(),
-    val date: String = "01/01/2000",
-    val startTime: String = "07:00",
-    val endTime: String = "15:00",
-    val extraInfo: String = ""
+        override val _id: String? = null,
+        val restaurantId: String = " ",
+        var workerId: String = " ",
+        val hourlyRate: String = "1075",
+        var status: Int = 0,
+        val credentials: MutableList<String> = mutableListOf(),
+        var sentList: MutableList<String> = mutableListOf(),
+        var reviewList: MutableList<String> = mutableListOf(),
+        val date: String = "01/01/2000",
+        val startTime: String = "07:00",
+        val endTime: String = "15:00",
+        val extraInfo: String = ""
 ) : Collection
 
 data class WorkerRestaurantRelation(
