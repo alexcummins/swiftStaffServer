@@ -14,8 +14,10 @@ data class Worker(
     val dob: String = "01/01/2020",
     val personalStatement: String = " ",
     val qualificationIds: MutableList<String> = mutableListOf(),
+    val credentials: MutableList<String> = mutableListOf(),
     val expertiseIds: MutableList<Int> = mutableListOf(),
-    val rating: Double = 5.0,
+    val ratingTotal: Int = 5,
+    val ratingCount: Int = 1,
     val imageIds: MutableList<String> = mutableListOf()
 ) : Collection
 
@@ -52,10 +54,11 @@ data class Job(
     override val _id: String? = null,
     val restaurantId: String = " ",
     val workerId: String = " ",
-    val sendStrategyId: Int = 1,
     val hourlyRate: String = "1075",
     val status: Int = 0,
-    val expertiseId: Int = 0,
+    val credentials: MutableList<String> = mutableListOf(),
+    val sentList: MutableList<String> = mutableListOf(),
+    val reviewList: MutableList<String> = mutableListOf(),
     val date: String = "01/01/2000",
     val startTime: String = "07:00",
     val endTime: String = "15:00",

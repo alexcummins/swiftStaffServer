@@ -14,12 +14,13 @@ interface Credentials {
 }
 
 data class SignupWorker(
-        override val email: String,
-        override val password: String,
-        val fName: String,
-        val lName: String,
-        val phone: Long,
-        val dob: String
+    override val email: String,
+    override val password: String,
+    val fName: String,
+    val lName: String,
+    val credentials: MutableList<String>,
+    val phone: Long,
+    val dob: String
 ) : Credentials
 
 data class SignupRestaurant(
@@ -39,13 +40,14 @@ data class LoginAttempt(
 
 
 data class LoginWorkerResponse(
-        val userId: String,
-        val userType: Int,
-        val email: String,
-        val fName: String,
-        val lName: String,
-        val phone: Long,
-        val signUpFinished: Boolean
+    val userId: String,
+    val workerId: String,
+    val userType: Int,
+    val email: String,
+    val fName: String,
+    val lName: String,
+    val phone: Long,
+    val signUpFinished: Boolean
 )
 
 
@@ -64,9 +66,8 @@ data class LoginRestaurantResponse(
 
 data class NewJobRequest(
         val restaurantId: String,
-        val sendStrategyId: Int = 1,
         val hourlyRate: String = "1075",
-        val expertiseId: Int = 1,
+        val credentials: MutableList<String>,
         val date: String = "01/01/2000",
         val startTime: String = "07:00",
         val endTime: String = "15:00",
@@ -95,3 +96,31 @@ data class RestaurantProfile(
         val twitterLink: String,
         val instagramLink: String
 )
+
+data class UserIdentity(
+        val userId: String,
+        val userType: Int
+)
+
+data class WorkerProfile(
+        val userId: String,
+        val fName: String,
+        val lName: String,
+        val phone: Long,
+        val address: String,
+        val skillsAndQualities: MutableList<String>,
+        val experience: MutableList<String>,
+        val personalStatement: String,
+        val ratingTotal: Int,
+        val ratingCount: Int
+)
+
+data class UploadInfo(
+        val userId: String,
+        val resourceName: String
+)
+
+data class WorkerId(
+        val workerId: String
+)
+
