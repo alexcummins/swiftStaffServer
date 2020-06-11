@@ -348,16 +348,19 @@ fun Application.module() {
                         // Add restaurant job Response
                     }
                     JobCommand.WORKER_DECLINE.num -> {
+                        println("Worker decline recieved")
                         job.sentList.remove(patchRequest.workerId)
                         job.reviewList.remove(patchRequest.workerId)
                         job.sentList = job.sentList.distinct().toMutableList()
                         job.reviewList = job.reviewList.distinct().toMutableList()
                         MongoDatabase.update(job, Job::_id eq job._id)
                         val newJobs = openJobsForWorker(workerId = WorkerId(workerId = patchRequest.workerId))
+                        println("New jobs size: ${newJobs.size}")
                         updateWebSockets(wsConnections)
                         if (newJobs.isNotEmpty()) {
                             call.respond(status = HttpStatusCode.OK, message = Jobs(newJobs.size, newJobs))
                         } else {
+                            println("No jobs");
                             call.respond(status = HttpStatusCode.NotFound, message = "No jobs found")
                         }
                     }
