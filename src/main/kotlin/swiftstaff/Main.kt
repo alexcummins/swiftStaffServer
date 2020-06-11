@@ -3,6 +3,7 @@ package swiftstaff
 import com.google.gson.Gson
 import com.google.maps.GeoApiContext
 import com.google.maps.GeocodingApi
+import com.mongodb.client.model.Filters
 import io.ktor.application.Application
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
@@ -31,7 +32,11 @@ import org.litote.kmongo.eq
 import swiftstaff.api.v1.*
 import io.github.rybalkinsd.kohttp.dsl.httpPost
 import io.github.rybalkinsd.kohttp.ext.url
+import io.ktor.http.HttpStatusCode.Companion.Created
 import org.apache.log4j.BasicConfigurator
+import org.bson.conversions.Bson
+import org.litote.kmongo.MongoOperator.`in`
+import org.litote.kmongo.`in`
 
 // Main server
 fun Application.module() {
@@ -62,6 +67,7 @@ fun Application.module() {
                 fName = signup.fName,
                 lName = signup.lName,
                 phone = signup.phone,
+                credentials = signup.credentials,
                 dob = signup.dob
             )
             println("Worker class created")
@@ -76,7 +82,7 @@ fun Application.module() {
                 val success = MongoDatabase.insert(user)
                 println("User succesfully inserted")
 
-                if (success){
+                if (success) {
                     println("About to respond")
 
                     call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id))
@@ -109,8 +115,11 @@ fun Application.module() {
             if (success) {
                 val user = createUser(signup, restaurant, UserType.Restaurant)
                 val success = MongoDatabase.insert(user)
-                if (success){
-                    call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id, "restaurantId" to restaurant._id))
+                if (success) {
+                    call.respond(
+                        status = HttpStatusCode.Created,
+                        message = mapOf("id" to user._id, "restaurantId" to restaurant._id)
+                    )
                 } else {
                     call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
                 }
@@ -124,7 +133,7 @@ fun Application.module() {
             val jobsList: MutableList<JobResponse> = mutableListOf()
             jobs.forEach {
                 val restaurant = MongoDatabase.find<Restaurant>(Restaurant::_id eq it.restaurantId)
-                val jobResponse =  if(restaurant.isNotEmpty()){
+                val jobResponse = if (restaurant.isNotEmpty()) {
                     JobResponse(job = it, restaurant = restaurant.first())
                 } else {
                     JobResponse(job = it, restaurant = Restaurant())
@@ -164,8 +173,15 @@ fun Application.module() {
                         val workerObj = MongoDatabase.find<Worker>(Worker::_id eq user.foreignTableId)
                         if (workerObj.isNotEmpty()) {
                             val worker = workerObj.first()
-                            val responseObject = LoginWorkerResponse(userId = user._id.orEmpty(), userType = user.userType, email = user.email, fName = worker.fName,
-                                    lName = worker.lName, phone = worker.phone, signUpFinished = user.signUpFinished)
+                            val responseObject = LoginWorkerResponse(
+                                userId = user._id.orEmpty(),
+                                userType = user.userType,
+                                email = user.email,
+                                fName = worker.fName,
+                                lName = worker.lName,
+                                phone = worker.phone,
+                                signUpFinished = user.signUpFinished
+                            )
                             call.respond(status = HttpStatusCode.OK, message = responseObject)
                         } else {
                             internalServerError(call = call)
@@ -174,10 +190,18 @@ fun Application.module() {
                         val restaurantObj = MongoDatabase.find<Restaurant>(Restaurant::_id eq user.foreignTableId)
                         if (restaurantObj.isNotEmpty()) {
                             val restaurant = restaurantObj.first()
-                            val responseObject = LoginRestaurantResponse(userId = user._id.orEmpty(), userType = user.userType, email = user.email, fName = "",
-                                    lName = "", restaurantPhone = restaurant.phone, restaurantName = restaurant.name,
-                                    restaurantEmail = restaurant.restaurantEmailAddress, signUpFinished = user.signUpFinished,
-                                    restaurantId = restaurant._id.orEmpty())
+                            val responseObject = LoginRestaurantResponse(
+                                userId = user._id.orEmpty(),
+                                userType = user.userType,
+                                email = user.email,
+                                fName = "",
+                                lName = "",
+                                restaurantPhone = restaurant.phone,
+                                restaurantName = restaurant.name,
+                                restaurantEmail = restaurant.restaurantEmailAddress,
+                                signUpFinished = user.signUpFinished,
+                                restaurantId = restaurant._id.orEmpty()
+                            )
                             call.respond(status = HttpStatusCode.OK, message = responseObject)
                         } else {
                             internalServerError(call = call)
@@ -207,8 +231,8 @@ fun Application.module() {
                             val jobsList: MutableList<JobResponse> = mutableListOf()
                             jobs.forEach {
                                 val restaurant = MongoDatabase.find<Restaurant>(Restaurant::_id eq it.restaurantId)
-                                val jobResponse =  if(restaurant.isNotEmpty()){
-                                   JobResponse(job = it, restaurant = restaurant.first())
+                                val jobResponse = if (restaurant.isNotEmpty()) {
+                                    JobResponse(job = it, restaurant = restaurant.first())
                                 } else {
                                     JobResponse(job = it, restaurant = Restaurant())
                                 }
@@ -236,18 +260,27 @@ fun Application.module() {
 
         post("/api/v1/jobs") {
             val newJob = call.receive<NewJobRequest>()
+
+            var workers: MutableSet<Worker> = mutableSetOf()
+            newJob.credentials.forEach {
+                workers.addAll(MongoDatabase.find<Worker>(Filters.`in`("credentials", it)))
+            }
+            var workerIds: MutableSet<String> = mutableSetOf()
+            workers.forEach { workerIds.add(it._id!!) }
+
             val job = Job(
-                    restaurantId = newJob.restaurantId,
-                    sendStrategyId = newJob.sendStrategyId,
-                    hourlyRate = newJob.hourlyRate,
-                    expertiseId = newJob.expertiseId,
-                    startTime = newJob.startTime,
-                    endTime = newJob.endTime,
-                    date = newJob.date,
-                    extraInfo = newJob.extraInfo)
+                restaurantId = newJob.restaurantId,
+                hourlyRate = newJob.hourlyRate,
+                credentials = newJob.credentials,
+                sentList = workerIds.toMutableList(),
+                startTime = newJob.startTime,
+                endTime = newJob.endTime,
+                date = newJob.date,
+                extraInfo = newJob.extraInfo
+            )
             val success = MongoDatabase.insert(job)
             if (success) {
-                call.respond(status = HttpStatusCode.Created, message = mapOf("id" to job._id))
+                call.respond(status = Created, message = mapOf("id" to job._id))
                 sendJobsOut(job)
             } else {
                 internalServerError(call = call)
@@ -256,7 +289,7 @@ fun Application.module() {
     }
 }
 
-private suspend fun internalServerError(message:String = "Internal Server Error", call: ApplicationCall){
+private suspend fun internalServerError(message: String = "Internal Server Error", call: ApplicationCall) {
     return call.respond(message = message, status = HttpStatusCode.InternalServerError)
 }
 
@@ -283,24 +316,26 @@ fun main(args: Array<String>) {
     embeddedServer(Netty, 8080, module = Application::module).start()
 }
 
-private fun addressToLatLong(address:String) : Pair<Double, Double> {
+private fun addressToLatLong(address: String): Pair<Double, Double> {
     val context = GeoApiContext.Builder()
-            .apiKey("AIzaSyBxlhtrrP5NhGfbshE6hZVThra8_8MhC2g")
-            .build();
-    val results = GeocodingApi.geocode(context,
-            address).await()
-    return if(results.isNotEmpty()){
+        .apiKey("AIzaSyBxlhtrrP5NhGfbshE6hZVThra8_8MhC2g")
+        .build();
+    val results = GeocodingApi.geocode(
+        context,
+        address
+    ).await()
+    return if (results.isNotEmpty()) {
         val fstResult = results[0].geometry.location;
-        Pair(fstResult.lat,fstResult.lng)
+        Pair(fstResult.lat, fstResult.lng)
     } else {
-        Pair<Double, Double>(0.0,0.0)
+        Pair<Double, Double>(0.0, 0.0)
 
     }
 
 }
 
 
-fun sendJobsOut(job: Job){
+fun sendJobsOut(job: Job) {
     val restaurants = MongoDatabase.find<Restaurant>(Restaurant::_id eq job.restaurantId);
     if (restaurants.isNotEmpty()) {
         println("sending")
@@ -308,7 +343,7 @@ fun sendJobsOut(job: Job){
         val restaurantName = restaurants.first().name
         for (user in users) {
             user.fcmTokens.forEach {
-                if(user.userType == UserType.Worker.num) {
+                if (user.userType == UserType.Worker.num) {
                     println(it)
                     sendFirebaseNotification(
                         registrationToken = it,
@@ -322,23 +357,32 @@ fun sendJobsOut(job: Job){
     }
 }
 
-fun sendFirebaseNotification(registrationToken: String, notificationTitle: String = "", notificationMessage: String = "", data: Map<String, String>? = null) {
+fun sendFirebaseNotification(
+    registrationToken: String,
+    notificationTitle: String = "",
+    notificationMessage: String = "",
+    data: Map<String, String>? = null
+) {
 
-    val key = "key= AAAARV140IQ:APA91bG4khwUnHSpOHOqkOWYNGt0QaOn3-ZVUrXtnI6LgTyZRoakAcM9bNlsGAaVUJ45PrJ5bQbHQCOcgPYUnpAB-fO6bgA7nt0V0lanYvGGORWo-W7zob5rGXdH2-RQOsCeOBOY4GMg"
+    val key =
+        "key= AAAARV140IQ:APA91bG4khwUnHSpOHOqkOWYNGt0QaOn3-ZVUrXtnI6LgTyZRoakAcM9bNlsGAaVUJ45PrJ5bQbHQCOcgPYUnpAB-fO6bgA7nt0V0lanYvGGORWo-W7zob5rGXdH2-RQOsCeOBOY4GMg"
     val response = httpPost {
         url("https://fcm.googleapis.com/fcm/send")
 
         header { "Authorization" to key }
 
-        body { json ("""{ 
+        body {
+            json(
+                """{ 
                                     "notification": {
                                                         "title": "$notificationTitle",
                                                         "text": "$notificationMessage",
                                                     },
                                     "to" : "$registrationToken"
-                                }""")
-            }
+                                }"""
+            )
         }
+    }
 
     println("Successfully sent message: $response")
 }

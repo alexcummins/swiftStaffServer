@@ -18,6 +18,7 @@ data class SignupWorker(
     override val password: String,
     val fName: String,
     val lName: String,
+    val credentials: MutableList<String>,
     val phone: Long,
     val dob: String
 ) : Credentials
@@ -64,9 +65,8 @@ data class LoginRestaurantResponse(
 
 data class NewJobRequest(
         val restaurantId: String,
-        val sendStrategyId: Int = 1,
         val hourlyRate: String = "1075",
-        val expertiseId: Int = 1,
+        val credentials: MutableList<String>,
         val date: String = "01/01/2000",
         val startTime: String = "07:00",
         val endTime: String = "15:00",
