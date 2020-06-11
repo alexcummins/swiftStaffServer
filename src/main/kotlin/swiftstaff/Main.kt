@@ -224,18 +224,18 @@ fun Application.module() {
         post("/api/v1/profile/restaurant") {
             println("Handle restaurant profile request")
 
-            val testRestaurant = Restaurant(
-                    name = "Eastside Cafe",
-                    address = "Princes Gardens, London, SW72AZ",
-//                    phone = 2569984529,
-                    restaurantEmailAddress = "eastsidecafe.com",
-                    longitude = 51.499014,
-                    latitude = -0.172002,
-                    facebookLink = "https://www.facebook.com/EastsideBar/",
-                    twitterLink = "https://twitter.com/eastsidecafe?",
-                    instagramLink = "https://www.instagram.com/eastsidecafe/?hl=en"
-            )
-            MongoDatabase.insert(testRestaurant)
+//            val testRestaurant = Restaurant(
+//                    name = "Eastside Cafe",
+//                    address = "Princes Gardens, London, SW72AZ",
+////                    phone = 2569984529,
+//                    restaurantEmailAddress = "eastsidecafe.com",
+//                    longitude = 51.499014,
+//                    latitude = -0.172002,
+//                    facebookLink = "https://www.facebook.com/EastsideBar/",
+//                    twitterLink = "https://twitter.com/eastsidecafe?",
+//                    instagramLink = "https://www.instagram.com/eastsidecafe/?hl=en"
+//            )
+//            MongoDatabase.insert(testRestaurant)
 
             val restaurantIdentity = call.receive<RestaurantIdentity>()
             println("received restaurant identity")
