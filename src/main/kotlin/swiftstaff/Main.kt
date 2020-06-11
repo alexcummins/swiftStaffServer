@@ -85,7 +85,7 @@ fun Application.module() {
                 if (success) {
                     println("About to respond")
 
-                    call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id))
+                    call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id, "workerId" to worker._id))
                     println("Responding")
 
                 } else {
