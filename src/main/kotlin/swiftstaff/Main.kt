@@ -23,6 +23,7 @@ import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.get
 import io.ktor.routing.post
+import io.ktor.routing.put
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -33,6 +34,7 @@ import swiftstaff.api.v1.*
 import io.github.rybalkinsd.kohttp.dsl.httpPost
 import io.github.rybalkinsd.kohttp.ext.url
 import io.ktor.http.HttpStatusCode.Companion.Created
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.response.respondFile
 import org.apache.log4j.BasicConfigurator
 import org.bson.conversions.Bson
@@ -174,6 +176,30 @@ fun Application.module() {
             }
         }
 
+        put("/api/v1/new/rating/worker") {
+            println("Handle worker new rating request")
+
+            val workerRequest = call.receive<NewWorkerRating>()
+            println("Received new rating")
+
+            println("WorkersSize: " + MongoDatabase.db.getCollection("worker").countDocuments())
+
+            val workers = MongoDatabase.find<Worker>(Worker::_id eq workerRequest.userId)
+            println("Found Workers:" + workers.size)
+
+            if (workers.isNotEmpty()) {
+                val worker = workers.first()
+                worker.ratingTotal = worker.ratingTotal + workerRequest.newRating
+                worker.ratingCount = worker.ratingCount + 1
+
+                // Update Worker information
+                MongoDatabase.update(worker, Worker::_id eq workerRequest.userId)
+                call.respond(HttpStatusCode.OK)
+            } else {
+                call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
+            }
+        }
+
         get("/api/v1/downloads/{resourceName}/{imageId}") {
             val resourceName = call.parameters["resourceName"].orEmpty()
             val imageId = call.parameters["imageId"].orEmpty()
@@ -251,6 +277,7 @@ fun Application.module() {
         }
 
         post("/api/v1/uploads") {
+
 
 
 
