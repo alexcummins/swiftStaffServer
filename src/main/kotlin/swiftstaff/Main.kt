@@ -153,6 +153,32 @@ fun Application.module() {
             }
         }
 
+
+        put("/api/v1/new/rating/worker") {
+            println("Handle worker new rating request")
+
+            val workerRequest = call.receive<NewWorkerRating>()
+            println("Received new rating")
+
+            println("WorkersSize: " + MongoDatabase.db.getCollection("worker").countDocuments())
+
+            val workers = MongoDatabase.find<Worker>(Worker::_id eq workerRequest.userId)
+            println("Found Workers:" + workers.size)
+
+            if (workers.isNotEmpty()) {
+                val worker = workers.first()
+                worker.ratingTotal = worker.ratingTotal + workerRequest.newRating
+                worker.ratingCount = worker.ratingCount + 1
+
+                // Update Worker information
+                MongoDatabase.update(worker, Worker::_id eq workerRequest.userId)
+                call.respond(HttpStatusCode.OK)
+            } else {
+                call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
+            }
+        }
+
+
         post("/api/v1/profile/worker") {
             println("Handle worker profile request")
 
@@ -177,31 +203,7 @@ fun Application.module() {
                         personalStatement = worker.personalStatement,
                         ratingTotal = worker.ratingTotal,
                         ratingCount = worker.ratingCount)
-                        call.respond(status = HttpStatusCode.OK, message = workerProfile)
-            } else {
-                call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
-            }
-        }
-
-        put("/api/v1/new/rating/worker") {
-            println("Handle worker new rating request")
-
-            val workerRequest = call.receive<NewWorkerRating>()
-            println("Received new rating")
-
-            println("WorkersSize: " + MongoDatabase.db.getCollection("worker").countDocuments())
-
-            val workers = MongoDatabase.find<Worker>(Worker::_id eq workerRequest.userId)
-            println("Found Workers:" + workers.size)
-
-            if (workers.isNotEmpty()) {
-                val worker = workers.first()
-                worker.ratingTotal = worker.ratingTotal + workerRequest.newRating
-                worker.ratingCount = worker.ratingCount + 1
-
-                // Update Worker information
-                MongoDatabase.update(worker, Worker::_id eq workerRequest.userId)
-                call.respond(HttpStatusCode.OK)
+                call.respond(status = HttpStatusCode.OK, message = workerProfile)
             } else {
                 call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
             }
@@ -231,6 +233,7 @@ fun Application.module() {
         }
 
         post("/api/v1/uploads") {
+
 
 
 
