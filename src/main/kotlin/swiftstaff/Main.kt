@@ -414,6 +414,7 @@ fun Application.module() {
                         job.sentList = mutableListOf()
                         job.reviewList = mutableListOf()
                         MongoDatabase.update(job, Job::_id eq job._id)
+                        updateWebSockets(wsConnections)
                         // Add restaurant job Response
                     }
                     JobCommand.WORKER_DECLINE.num -> {
