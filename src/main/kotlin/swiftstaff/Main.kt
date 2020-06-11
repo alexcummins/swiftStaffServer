@@ -134,7 +134,7 @@ fun Application.module() {
         }
 
         // Get jobs based on your userId
-        get("/api/v1/jobs") {
+        post("/api/v1/jobs/worker") {
             val workerId = call.receive<WorkerId>()
             val  jobsList: MutableList<JobResponse> = openJobsForWorker(workerId)
             if (jobsList.isNotEmpty()) {
