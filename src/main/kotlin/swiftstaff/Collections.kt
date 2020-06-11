@@ -13,9 +13,9 @@ data class Worker(
     val phone: Long = 79999999,
     val dob: String = "01/01/2020",
     val personalStatement: String = " ",
-    val qualificationIds: MutableList<String> = mutableListOf(),
     val expertiseIds: MutableList<Int> = mutableListOf(),
-    val rating: Double = 5.0,
+    val ratingTotal: Int = 5,
+    val ratingCount: Int = 1,
     val imageIds: MutableList<String> = mutableListOf()
 ) : Collection
 
