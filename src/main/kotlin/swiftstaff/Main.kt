@@ -339,7 +339,7 @@ fun Application.module() {
                             val text = frame.readText()
                             println(text)
                             if(text.startsWith("workerId: ")){
-                                val workerId = WorkerId(text.removePrefix("workerID:"))
+                                val workerId = WorkerId(text.removePrefix("workerId: "))
                                 val jobsList: MutableList<JobResponse> = openJobsForWorker(workerId = workerId)
                                 if (jobsList.isNotEmpty()) {
                                     val gson = Gson()
@@ -365,11 +365,11 @@ fun Application.module() {
         post("/api/v1/jobs") {
             val newJob = call.receive<NewJobRequest>()
 
-            var workers: MutableSet<Worker> = mutableSetOf()
+            val workers: MutableSet<Worker> = mutableSetOf()
             newJob.credentials.forEach {
                 workers.addAll(MongoDatabase.find<Worker>(Filters.`in`("credentials", it)))
             }
-            var workerIds: MutableSet<String> = mutableSetOf()
+            val workerIds: MutableSet<String> = mutableSetOf()
             workers.forEach { workerIds.add(it._id!!) }
 
             val job = Job(
