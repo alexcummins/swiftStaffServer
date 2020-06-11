@@ -128,8 +128,10 @@ fun Application.module() {
             }
         }
 
+        // Get jobs based on your userId
         get("/api/v1/jobs") {
-            val jobs = MongoDatabase.find<Job>()
+            val workerId = call.receive<WorkerId>()
+            val jobs = MongoDatabase.find<Job>(Filters.`in`("sentList", workerId.workerId))
             val jobsList: MutableList<JobResponse> = mutableListOf()
             jobs.forEach {
                 val restaurant = MongoDatabase.find<Restaurant>(Restaurant::_id eq it.restaurantId)
@@ -143,6 +145,8 @@ fun Application.module() {
             }
             if (jobs.isNotEmpty()) {
                 call.respond(status = HttpStatusCode.OK, message = Jobs(jobs.size, jobsList))
+            } else {
+                call.respond(status = HttpStatusCode.NotFound, message = "No jobs found")
             }
         }
 

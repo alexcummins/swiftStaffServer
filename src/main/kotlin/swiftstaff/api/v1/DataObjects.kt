@@ -77,3 +77,7 @@ data class JobResponse(
         val job: Job,
         val restaurant: Restaurant
 )
+
+data class WorkerId(
+    val workerId: String
+)
