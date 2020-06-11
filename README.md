@@ -86,6 +86,11 @@ And see whats in them with:
 db.User.find({})
 ```
 
+To log in to the real database, first ssh in (ip on trello, ssh keys should be set ip),  and then run:
+
+```
+mongo --username <username> --password <password> --authenticationDatabase "admin"
+```
 
 
 
