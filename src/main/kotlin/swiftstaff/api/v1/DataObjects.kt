@@ -2,8 +2,9 @@ package swiftstaff.api.v1
 
 import swiftstaff.Job
 import swiftstaff.Restaurant
+import swiftstaff.Worker
 
-enum class UserType(val num: Int) {
+enum class UserType (val num: Int) {
     Restaurant(1),
     Worker(2)
 }
@@ -14,13 +15,13 @@ interface Credentials {
 }
 
 data class SignupWorker(
-    override val email: String,
-    override val password: String,
-    val fName: String,
-    val lName: String,
-    val credentials: MutableList<String>,
-    val phone: Long,
-    val dob: String
+        override val email: String,
+        override val password: String,
+        val fName: String,
+        val lName: String,
+        val credentials: MutableList<String>,
+        val phone: Long,
+        val dob: String
 ) : Credentials
 
 data class SignupRestaurant(
@@ -40,14 +41,14 @@ data class LoginAttempt(
 
 
 data class LoginWorkerResponse(
-    val userId: String,
-    val workerId: String,
-    val userType: Int,
-    val email: String,
-    val fName: String,
-    val lName: String,
-    val phone: Long,
-    val signUpFinished: Boolean
+        val userId: String,
+        val workerId: String,
+        val userType: Int,
+        val email: String,
+        val fName: String,
+        val lName: String,
+        val phone: Long,
+        val signUpFinished: Boolean
 )
 
 
@@ -79,7 +80,39 @@ data class JobResponse(
         val restaurant: Restaurant
 )
 
-data class RestaurantIdentity(
+data class JobResponseForRestaurant(
+        val job: Job,
+        val workers: MutableList<Worker>
+)
+
+data class UserIdentity(
+        val userId: String,
+        val userType: Int
+)
+
+data class WorkerProfile(
+        val userId: String,
+        val fName: String,
+        val lName: String,
+        val phone: Long,
+        val address: String,
+        val skillsAndQualities: MutableList<String>,
+        val experience: MutableList<String>,
+        val personalStatement: String,
+        val ratingTotal: Double,
+        val ratingCount: Int
+)
+
+data class UploadInfo(
+        val userId: String,
+        val resourceName: String
+)
+
+data class WorkerId(
+        val workerId: String
+)
+
+data class RestaurantId(
         val restaurantId: String
 )
 
@@ -97,30 +130,13 @@ data class RestaurantProfile(
         val instagramLink: String
 )
 
-data class UserIdentity(
+
+data class NewWorkerRating(
         val userId: String,
-        val userType: Int
+        val newRating: Double
 )
-
-data class WorkerProfile(
-        val userId: String,
-        val fName: String,
-        val lName: String,
-        val phone: Long,
-        val address: String,
-        val skillsAndQualities: MutableList<String>,
-        val experience: MutableList<String>,
-        val personalStatement: String,
-        val ratingTotal: Int,
-        val ratingCount: Int
+data class WorkerPatch(
+        val jobId: String,
+        val workerId: String,
+        val commandId: Int
 )
-
-data class UploadInfo(
-        val userId: String,
-        val resourceName: String
-)
-
-data class WorkerId(
-        val workerId: String
-)
-

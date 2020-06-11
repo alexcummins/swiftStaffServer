@@ -1,6 +1,7 @@
 package swiftstaff
 
 import swiftstaff.api.v1.JobResponse
+import swiftstaff.api.v1.JobResponseForRestaurant
 
 interface Collection {
     val _id: String?
@@ -16,8 +17,8 @@ data class Worker(
     val qualificationIds: MutableList<String> = mutableListOf(),
     val credentials: MutableList<String> = mutableListOf(),
     val expertiseIds: MutableList<Int> = mutableListOf(),
-    val ratingTotal: Int = 5,
-    val ratingCount: Int = 1,
+    var ratingTotal: Double = 0.0,
+    var ratingCount: Int = 0,
     val imageIds: MutableList<String> = mutableListOf()
 ) : Collection
 
@@ -51,18 +52,18 @@ data class User(
 
 
 data class Job(
-    override val _id: String? = null,
-    val restaurantId: String = " ",
-    val workerId: String = " ",
-    val hourlyRate: String = "1075",
-    val status: Int = 0,
-    val credentials: MutableList<String> = mutableListOf(),
-    val sentList: MutableList<String> = mutableListOf(),
-    val reviewList: MutableList<String> = mutableListOf(),
-    val date: String = "01/01/2000",
-    val startTime: String = "07:00",
-    val endTime: String = "15:00",
-    val extraInfo: String = ""
+        override val _id: String? = null,
+        val restaurantId: String = " ",
+        var workerId: String = " ",
+        val hourlyRate: String = "1075",
+        var status: Int = 0,
+        val credentials: MutableList<String> = mutableListOf(),
+        var sentList: MutableList<String> = mutableListOf(),
+        var reviewList: MutableList<String> = mutableListOf(),
+        val date: String = "01/01/2000",
+        val startTime: String = "07:00",
+        val endTime: String = "15:00",
+        val extraInfo: String = ""
 ) : Collection
 
 data class WorkerRestaurantRelation(
@@ -73,3 +74,4 @@ data class WorkerRestaurantRelation(
 ) : Collection
 
 data class Jobs(val count: Int, val jobsList: MutableList<JobResponse>)
+data class JobsForRestaurant(val count: Int, val jobsList: MutableList<JobResponseForRestaurant>)
