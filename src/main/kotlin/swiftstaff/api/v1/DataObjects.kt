@@ -79,6 +79,30 @@ data class JobResponse(
         val restaurant: Restaurant
 )
 
-data class WorkerId(
-    val workerId: String
+data class UserIdentity(
+        val userId: String,
+        val userType: Int
 )
+
+data class WorkerProfile(
+        val userId: String,
+        val fName: String,
+        val lName: String,
+        val phone: Long,
+        val address: String,
+        val skillsAndQualities: MutableList<String>,
+        val experience: MutableList<String>,
+        val personalStatement: String,
+        val ratingTotal: Int,
+        val ratingCount: Int
+)
+
+data class UploadInfo(
+        val userId: String,
+        val resourceName: String
+)
+
+data class WorkerId(
+        val workerId: String
+)
+
