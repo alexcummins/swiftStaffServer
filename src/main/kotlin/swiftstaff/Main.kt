@@ -412,7 +412,7 @@ fun Application.module() {
                         job.status = 1
                         job.workerId = patchRequest.workerId
                         job.sentList = mutableListOf()
-                        job.reviewList = mutableListOf()
+                        job.reviewList = mutableListOf(patchRequest.workerId)
                         MongoDatabase.update(job, Job::_id eq job._id)
                         updateWebSockets(wsConnections)
                         // Add restaurant job Response
