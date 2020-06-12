@@ -4,6 +4,8 @@ import com.google.gson.Gson
 import com.google.maps.GeoApiContext
 import com.google.maps.GeocodingApi
 import com.mongodb.client.model.Filters
+import io.github.rybalkinsd.kohttp.dsl.httpPost
+import io.github.rybalkinsd.kohttp.ext.url
 import io.ktor.application.Application
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
@@ -15,26 +17,19 @@ import io.ktor.features.DefaultHeaders
 import io.ktor.gson.gson
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.HttpStatusCode.Companion.Created
+import io.ktor.http.cio.websocket.*
 import io.ktor.request.receive
 import io.ktor.response.respond
-import io.ktor.routing.get
-import io.ktor.routing.post
-import io.ktor.routing.put
-import io.ktor.routing.routing
+import io.ktor.response.respondFile
+import io.ktor.routing.*
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
+import org.apache.log4j.BasicConfigurator
 import org.litote.kmongo.eq
 import swiftstaff.api.v1.*
-import io.github.rybalkinsd.kohttp.dsl.httpPost
-import io.github.rybalkinsd.kohttp.ext.url
-import io.ktor.http.HttpStatusCode.Companion.Created
-import io.ktor.http.HttpStatusCode.Companion.OK
-import io.ktor.http.cio.websocket.*
-import io.ktor.response.respondFile
-import org.apache.log4j.BasicConfigurator
-import io.ktor.routing.patch
 import java.io.File
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -407,6 +402,18 @@ fun Application.module() {
                         } else {
                             call.respond(status = HttpStatusCode.NotFound, message = "No jobs found")
                         }
+
+                        val restaurants = MongoDatabase.find<Restaurant>(Restaurant::_id eq job.restaurantId)
+                        if (restaurants.isNotEmpty()) {
+                            restaurants.forEach { restaurant ->
+                                val date = job.date
+                                sendNotificationToUserByForeignId(foreignTableId = patchRequest.workerId,
+                                        notificationMessage =
+                                        "Someone has offered to do your Job on $date! \nOpen App to see it in Pending Tab.",
+                                        notificationTitle = "Response to Job Request"
+                                )
+                            }
+                        }
                     }
                     JobCommand.RESTAURANT_ACCEPT.num -> {
                         job.status = 1
@@ -415,6 +422,18 @@ fun Application.module() {
                         job.reviewList = mutableListOf(patchRequest.workerId)
                         MongoDatabase.update(job, Job::_id eq job._id)
                         updateWebSockets(wsConnections)
+                        val restaurants = MongoDatabase.find<Restaurant>(Restaurant::_id eq job.restaurantId)
+                        if (restaurants.isNotEmpty()) {
+                            restaurants.forEach { restaurant ->
+                                val restaurantName = restaurant.name
+                                val date = job.date
+                                sendNotificationToUserByForeignId(foreignTableId = patchRequest.workerId,
+                                        notificationMessage =
+                                        "Congratulations you shift at $restaurantName on $date has been approved! \nOpen App to see it in Confirmed Tab.",
+                                        notificationTitle = "Job Confirmed"
+                                )
+                            }
+                        }
                         // Add restaurant job Response
                     }
                     JobCommand.WORKER_DECLINE.num -> {
@@ -589,6 +608,21 @@ fun sendJobsOut(job: Job) {
             }
         }
 
+    }
+}
+
+fun sendNotificationToUserByForeignId(
+        foreignTableId: String,
+        notificationTitle: String = "",
+        notificationMessage: String = "",
+        data: Map<String, String>? = null) {
+
+    val workers = MongoDatabase.find<User>(User::foreignTableId eq foreignTableId)
+    if (workers.isNotEmpty()) {
+        val registrationTokens = workers.first().fcmTokens
+        registrationTokens.forEach { registrationToken ->
+            sendFirebaseNotification(registrationToken = registrationToken, notificationMessage = notificationMessage, notificationTitle = notificationTitle, data = data)
+        }
     }
 }
 
