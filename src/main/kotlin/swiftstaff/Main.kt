@@ -504,7 +504,7 @@ private fun openJobsForRestaurant(restaurantId: RestaurantId):  MutableList<JobR
     jobs.forEach {
         val workers = mutableSetOf<Worker>()
         it.reviewList.forEach { inner ->
-            val worker = MongoDatabase.find<Worker>(WorkerId::workerId eq inner)
+            val worker = MongoDatabase.find<Worker>(Worker::_id eq inner)
             if(worker.isNotEmpty()){
                 workers.addAll(worker)
             }
