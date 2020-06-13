@@ -177,12 +177,12 @@ fun Application.module() {
         post("/api/v1/profile/worker") {
             logMessage("Handle worker profile request")
 
-            val workerIdentity = call.receive<UserIdentity>()
+            val workerIdentity = call.receive<WorkerId>()
             logMessage("Received user identity")
 
             logMessage("WorkersSize: " + MongoDatabase.db.getCollection("worker").countDocuments())
 
-            val workers = MongoDatabase.find<Worker>(Worker::_id eq workerIdentity.userId)
+            val workers = MongoDatabase.find<Worker>(Worker::_id eq workerIdentity.workerId)
             logMessage("Found Workers:" + workers.size)
 
             if (workers.isNotEmpty()) {
