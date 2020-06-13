@@ -407,7 +407,7 @@ fun Application.module() {
                         if (restaurants.isNotEmpty()) {
                             restaurants.forEach { restaurant ->
                                 val date = job.date
-                                sendNotificationToUserByForeignId(foreignTableId = patchRequest.workerId,
+                                sendNotificationToUserByForeignId(foreignTableId = job.restaurantId,
                                         notificationMessage =
                                         "Someone has offered to do your Job on $date! \nOpen App to see it in Pending Tab.",
                                         notificationTitle = "Response to Job Request"
@@ -625,11 +625,11 @@ fun sendNotificationToUserByForeignId(
         notificationTitle: String = "",
         notificationMessage: String = "",
         data: Map<String, String>? = null) {
-
-    val workers = MongoDatabase.find<User>(User::foreignTableId eq foreignTableId)
-    if (workers.isNotEmpty()) {
-        val registrationTokens = workers.first().fcmTokens
+    val users = MongoDatabase.find<User>(User::foreignTableId eq foreignTableId)
+    if (users.isNotEmpty()) {
+        val registrationTokens = users.first().fcmTokens
         registrationTokens.forEach { registrationToken ->
+            logMessage("Sending notification to ${users.first().email} and token $registrationToken with message $notificationMessage")
             sendFirebaseNotification(registrationToken = registrationToken, notificationMessage = notificationMessage, notificationTitle = notificationTitle, data = data)
         }
     }
