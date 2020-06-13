@@ -27,7 +27,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
-import org.apache.log4j.BasicConfigurator
+import org.apache.log4j.*
 import org.litote.kmongo.eq
 import swiftstaff.api.v1.*
 import java.io.File
@@ -71,7 +71,7 @@ fun Application.module() {
 
         post("/api/v1/signup/worker") {
             val signup = call.receive<SignupWorker>()
-            println("Worker Signup correctly recieved")
+            logMessage("Worker Signup correctly recieved")
             val worker = Worker(
                     fname = signup.fname,
                     lname = signup.lname,
@@ -79,31 +79,31 @@ fun Application.module() {
                     credentials = signup.credentials,
                     dob = signup.dob
             )
-            println("Worker class created")
+            logMessage("Worker class created")
 
             val success = MongoDatabase.insert(worker)
-            println("Worker inserted success: $success")
+            logMessage("Worker inserted success: $success")
 
             if (success) {
-                println("About to create user")
+                logMessage("About to create user")
                 val user = createUser(signup, worker, UserType.Worker)
-                println("User Created")
+                logMessage("User Created")
                 val success = MongoDatabase.insert(user)
-                println("User succesfully inserted")
+                logMessage("User succesfully inserted")
 
                 if (success) {
-                    println("About to respond")
+                    logMessage("About to respond")
 
                     call.respond(status = HttpStatusCode.Created, message = mapOf("id" to user._id, "workerId" to worker._id))
-                    println("Responding")
+                    logMessage("Responding")
 
                 } else {
-                    println("User unsuccessful")
+                    logMessage("User unsuccessful")
 
                     internalServerError(call = call)
                 }
             } else {
-                println("worker unsuccessful")
+                logMessage("worker unsuccessful")
 
                 internalServerError(call = call)
             }
@@ -150,15 +150,15 @@ fun Application.module() {
 
 
         put("/api/v1/new/rating/worker") {
-            println("Handle worker new rating request")
+            logMessage("Handle worker new rating request")
 
             val workerRequest = call.receive<NewWorkerRating>()
-            println("Received new rating")
+            logMessage("Received new rating")
 
-            println("WorkersSize: " + MongoDatabase.db.getCollection("worker").countDocuments())
+            logMessage("WorkersSize: " + MongoDatabase.db.getCollection("worker").countDocuments())
 
             val workers = MongoDatabase.find<Worker>(Worker::_id eq workerRequest.userId)
-            println("Found Workers:" + workers.size)
+            logMessage("Found Workers:" + workers.size)
 
             if (workers.isNotEmpty()) {
                 val worker = workers.first()
@@ -175,15 +175,15 @@ fun Application.module() {
 
 
         post("/api/v1/profile/worker") {
-            println("Handle worker profile request")
+            logMessage("Handle worker profile request")
 
             val workerIdentity = call.receive<UserIdentity>()
-            println("Received user identity")
+            logMessage("Received user identity")
 
-            println("WorkersSize: " + MongoDatabase.db.getCollection("worker").countDocuments())
+            logMessage("WorkersSize: " + MongoDatabase.db.getCollection("worker").countDocuments())
 
             val workers = MongoDatabase.find<Worker>(Worker::_id eq workerIdentity.userId)
-            println("Found Workers:" + workers.size)
+            logMessage("Found Workers:" + workers.size)
 
             if (workers.isNotEmpty()) {
                 val worker = workers.first()
@@ -205,10 +205,10 @@ fun Application.module() {
         }
 
         post("/api/v1/profile/restaurant") {
-            println("Handle restaurant profile request")
+            logMessage("Handle restaurant profile request")
 
             val restaurantIdentity = call.receive<RestaurantId>()
-            println("received restaurant identity")
+            logMessage("received restaurant identity")
 
             val restaurants = MongoDatabase.find<Restaurant>(Restaurant::_id
                     eq restaurantIdentity.restaurantId)
@@ -239,12 +239,12 @@ fun Application.module() {
             val resourceName = call.parameters["resourceName"].orEmpty()
             val imageId = call.parameters["imageId"].orEmpty()
 
-            println("Uploading Test image")
+            logMessage("Uploading Test image")
             val objectId = MongoDatabase.upload("2", resourceName)
-            println(objectId)
-            println("Uploaded Image")
+            logMessage(objectId)
+            logMessage("Uploaded Image")
 
-            println("Requesting image download")
+            logMessage("Requesting image download")
             MongoDatabase.download(objectId, resourceName)
             val image = File("dbuffer/$resourceName.jpg")
 
@@ -266,26 +266,26 @@ fun Application.module() {
         }
 
         post("/api/v1/login") {
-            println("enter user")
+            logMessage("enter user")
 
             val loginAttempt = call.receive<LoginAttempt>()
-            println("recieved user")
+            logMessage("recieved user")
             val users = MongoDatabase.find<User>(User::email eq loginAttempt.email)
-            println("found user")
-            println(users.size)
+            logMessage("found user")
+            logMessage(users.size)
             if (users.isNotEmpty()) {
                 val user = users.first();
                 val passwordHash = user.passwordHash
                 val salt = user.salt
                 if (passwordHash == hashPassword(salt, loginAttempt.password)) {
-                    println("passwords match")
+                    logMessage("passwords match")
                     val fcmTokenList = user.fcmTokens;
                     if (!fcmTokenList.contains(loginAttempt.fcmToken)) {
                         fcmTokenList.add(loginAttempt.fcmToken);
                         user.fcmTokens = fcmTokenList
                         MongoDatabase.update(data = user, filter = User::email eq user.email)
                     }
-                    println("after tokens")
+                    logMessage("after tokens")
 
                     if (user.userType == UserType.Worker.num) {
                         val workerObj = MongoDatabase.find<Worker>(Worker::_id eq user.foreignTableId)
@@ -351,7 +351,7 @@ fun Application.module() {
                     when (frame) {
                         is Frame.Text -> {
                             val text = frame.readText()
-                            println(text)
+                            logMessage(text)
                             if(text.startsWith("workerId: ")){
                                 val workerId = WorkerId(text.removePrefix("workerId: "))
                                 val jobsList: MutableList<JobResponse> = openJobsForWorker(workerId = workerId)
@@ -437,19 +437,19 @@ fun Application.module() {
                         // Add restaurant job Response
                     }
                     JobCommand.WORKER_DECLINE.num -> {
-                        println("Worker decline recieved")
+                        logMessage("Worker decline recieved")
                         job.sentList.remove(patchRequest.workerId)
                         job.reviewList.remove(patchRequest.workerId)
                         job.sentList = job.sentList.distinct().toMutableList()
                         job.reviewList = job.reviewList.distinct().toMutableList()
                         MongoDatabase.update(job, Job::_id eq job._id)
                         val newJobs = openJobsForWorker(workerId = WorkerId(workerId = patchRequest.workerId))
-                        println("New jobs size: ${newJobs.size}")
+                        logMessage("New jobs size: ${newJobs.size}")
                         updateWebSockets(wsConnections)
                         if (newJobs.isNotEmpty()) {
                             call.respond(status = HttpStatusCode.OK, message = Jobs(newJobs.size, newJobs))
                         } else {
-                            println("No jobs");
+                            logMessage("No jobs");
                             call.respond(status = HttpStatusCode.NotFound, message = "No jobs found")
                         }
                     }
@@ -548,13 +548,13 @@ private suspend fun internalServerError(message: String = "Internal Server Error
 }
 
 private fun createUser(signup: Credentials, collection: Collection, userType: UserType): User {
-    println("About to generate salt")
+    logMessage("About to generate salt")
     val salt: String = generateSalt()
-    println("Salt generated")
+    logMessage("Salt generated")
 
     val passwordHash: String = hashPassword(salt, signup.password)
-    println("Hash generated")
-    println("About to return user class")
+    logMessage("Hash generated")
+    logMessage("About to return user class")
 
     return User(
             email = signup.email,
@@ -566,7 +566,14 @@ private fun createUser(signup: Credentials, collection: Collection, userType: Us
 }
 
 fun main(args: Array<String>) {
-    BasicConfigurator.configure()
+    val fa = FileAppender();
+    fa.name = "FileLogger";
+    fa.file = "server.log";
+    fa.layout =  PatternLayout("%d %-5p [%c{1}] %m%n");
+    fa.threshold = Level.DEBUG;
+    fa.append = true;
+    fa.activateOptions();
+    Logger.getRootLogger().addAppender(fa)
     embeddedServer(Netty, 8080, module = Application::module).start()
 }
 
@@ -589,16 +596,18 @@ private fun addressToLatLong(address: String): Pair<Double, Double> {
 }
 
 
+
+
 fun sendJobsOut(job: Job) {
     val restaurants = MongoDatabase.find<Restaurant>(Restaurant::_id eq job.restaurantId);
     if (restaurants.isNotEmpty()) {
-        println("sending")
+        logMessage("Sending FCM")
         val users = MongoDatabase.find<User>()
         val restaurantName = restaurants.first().name
         for (user in users) {
             user.fcmTokens.forEach {
                 if (user.userType == UserType.Worker.num) {
-                    println(it)
+                    logMessage(it)
                     sendFirebaseNotification(
                             registrationToken = it,
                             notificationTitle = "New Job Available",
@@ -653,7 +662,10 @@ fun sendFirebaseNotification(
         }
     }
 
-    println("Successfully sent message: $response")
+    logMessage("Successfully sent message: $response")
 }
 
-
+fun <T :Any> logMessage( message: T){
+    Logger.getRootLogger().log(Level.INFO, message.toString())
+    println(message.toString())
+}
