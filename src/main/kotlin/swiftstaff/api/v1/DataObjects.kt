@@ -17,8 +17,8 @@ interface Credentials {
 data class SignupWorker(
         override val email: String,
         override val password: String,
-        val fName: String,
-        val lName: String,
+        val fname: String,
+        val lname: String,
         val credentials: MutableList<String>,
         val phone: Long,
         val dob: String
@@ -45,8 +45,8 @@ data class LoginWorkerResponse(
         val workerId: String,
         val userType: Int,
         val email: String,
-        val fName: String,
-        val lName: String,
+        val fname: String,
+        val lname: String,
         val phone: Long,
         val signUpFinished: Boolean
 )
@@ -59,8 +59,8 @@ data class LoginRestaurantResponse(
         val restaurantEmail: String,
         val restaurantName: String,
         val restaurantPhone: Long,
-        val fName: String,
-        val lName: String,
+        val fname: String,
+        val lname: String,
         val signUpFinished: Boolean,
         val restaurantId: String
 )
@@ -92,8 +92,8 @@ data class UserIdentity(
 
 data class WorkerProfile(
         val userId: String,
-        val fName: String,
-        val lName: String,
+        val fname: String,
+        val lname: String,
         val phone: Long,
         val address: String,
         val skillsAndQualities: MutableList<String>,

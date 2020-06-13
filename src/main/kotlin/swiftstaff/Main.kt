@@ -73,8 +73,8 @@ fun Application.module() {
             val signup = call.receive<SignupWorker>()
             println("Worker Signup correctly recieved")
             val worker = Worker(
-                    fName = signup.fName,
-                    lName = signup.lName,
+                    fname = signup.fname,
+                    lname = signup.lname,
                     phone = signup.phone,
                     credentials = signup.credentials,
                     dob = signup.dob
@@ -189,8 +189,8 @@ fun Application.module() {
                 val worker = workers.first()
                 val workerProfile = WorkerProfile(
                         userId = worker._id.orEmpty(),
-                        fName = worker.fName,
-                        lName = worker.lName,
+                        fname = worker.fname,
+                        lname = worker.lname,
                         phone = worker.phone,
                         address = " ",
                         skillsAndQualities = MutableList(3) { _ -> "Test" },
@@ -296,8 +296,8 @@ fun Application.module() {
                                     workerId = worker._id.orEmpty(),
                                     userType = user.userType,
                                     email = user.email,
-                                    fName = worker.fName,
-                                    lName = worker.lName,
+                                    fname = worker.fname,
+                                    lname = worker.lname,
                                     phone = worker.phone,
                                     signUpFinished = user.signUpFinished
                             )
@@ -313,8 +313,8 @@ fun Application.module() {
                                     userId = user._id.orEmpty(),
                                     userType = user.userType,
                                     email = user.email,
-                                    fName = "",
-                                    lName = "",
+                                    fname = "",
+                                    lname = "",
                                     restaurantPhone = restaurant.phone,
                                     restaurantName = restaurant.name,
                                     restaurantEmail = restaurant.restaurantEmailAddress,

@@ -8,18 +8,18 @@ interface Collection {
 }
 
 data class Worker(
-    override val _id: String? = null,
-    val fName: String = "John",
-    val lName: String = "Doe",
-    val phone: Long = 79999999,
-    val dob: String = "01/01/2020",
-    val personalStatement: String = " ",
-    val qualificationIds: MutableList<String> = mutableListOf(),
-    val credentials: MutableList<String> = mutableListOf(),
-    val expertiseIds: MutableList<Int> = mutableListOf(),
-    var ratingTotal: Double = 0.0,
-    var ratingCount: Int = 0,
-    val imageIds: MutableList<String> = mutableListOf()
+        override val _id: String? = null,
+        val fname: String = "",
+        val lname: String = "",
+        val phone: Long = 79999999,
+        val dob: String = "01/01/2020",
+        val personalStatement: String = " ",
+        val qualificationIds: MutableList<String> = mutableListOf(),
+        val credentials: MutableList<String> = mutableListOf(),
+        val expertiseIds: MutableList<Int> = mutableListOf(),
+        var ratingTotal: Double = 0.0,
+        var ratingCount: Int = 0,
+        val imageIds: MutableList<String> = mutableListOf()
 ) : Collection
 
 
