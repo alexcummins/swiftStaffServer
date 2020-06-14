@@ -6,3 +6,4 @@ out/
 
 *.http
 nohup.out
+server.log

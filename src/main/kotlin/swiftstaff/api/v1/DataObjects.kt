@@ -116,6 +116,10 @@ data class RestaurantId(
         val restaurantId: String
 )
 
+data class JobId(
+        val _id: String
+)
+
 data class RestaurantProfile(
         val restaurantId: String,
         val name: String,

@@ -496,6 +496,17 @@ fun Application.module() {
                 internalServerError(call = call)
             }
         }
+
+        post("/api/v1/jobs/delete"){
+            val jobId = call.receive<JobId>()
+            logMessage("Call to delete job ${jobId._id}")
+            val success = MongoDatabase.deleteById<Job>(jobId._id)
+            if (success) {
+                call.respond(status = HttpStatusCode.OK, message = "Deleted")
+            } else {
+                call.respond(status = HttpStatusCode.NotModified, message = "Not deleted")
+            }
+        }
     }
 }
 

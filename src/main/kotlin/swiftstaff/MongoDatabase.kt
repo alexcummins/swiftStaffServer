@@ -13,6 +13,7 @@ import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.litote.kmongo.KMongo
+import org.litote.kmongo.deleteOneById
 import org.litote.kmongo.getCollection
 import org.litote.kmongo.updateOne
 import java.io.File
@@ -60,13 +61,18 @@ object MongoDatabase :  Database {
         return result.wasAcknowledged()
     }
 
+    override fun <T : Any> deleteById(_id: String, classParam: KClass<T>, collection: MongoCollection<T>): Boolean {
+        val result = collection.deleteOneById(_id)
+        return (result.deletedCount == 1L)
+
+    }
+
     override fun <T : Any> update(data: T, filter: Bson,  classParam: KClass<T>, collection: MongoCollection<T>): Boolean{
         return collection.updateOne(filter, data).wasAcknowledged()
     }
 
     fun upload(userId: String, resourceName: String) :String {
         try {
-
             // Delete previous version(s) of the resource
             val imageCursor = imageBucket.find(eq("filename" , "$userId/$resourceName.jpg")).iterator()
             while(imageCursor.hasNext()) {
@@ -112,6 +118,8 @@ object MongoDatabase :  Database {
     }
 
     inline fun <reified T : Any> insert(data: T): Boolean = insert(data, T::class, this.db.getCollection<T>())
+
+    inline fun <reified T : Any> deleteById(_id: String): Boolean = deleteById(_id, T::class, this.db.getCollection<T>())
 
     inline fun <reified T : Any> find(filter: Bson? = null): MutableList<T> = find(filter, T::class, this.db.getCollection<T>())
 
