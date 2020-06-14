@@ -19,7 +19,11 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.Created
 import io.ktor.http.cio.websocket.*
+import io.ktor.http.content.PartData
+import io.ktor.http.content.forEachPart
+import io.ktor.http.content.streamProvider
 import io.ktor.request.receive
+import io.ktor.request.receiveMultipart
 import io.ktor.response.respond
 import io.ktor.response.respondFile
 import io.ktor.routing.*
@@ -191,6 +195,7 @@ fun Application.module() {
                         userId = worker._id.orEmpty(),
                         fname = worker.fname,
                         lname = worker.lname,
+                        profileImageId = if (worker.imageIds.size == 0) "0" else worker.imageIds[0], // Old safe measure artefact, delete when we do a drop()
                         phone = worker.phone,
                         address = " ",
                         skillsAndQualities = MutableList(3) { _ -> "Test" },
@@ -239,30 +244,79 @@ fun Application.module() {
             val resourceName = call.parameters["resourceName"].orEmpty()
             val imageId = call.parameters["imageId"].orEmpty()
 
-            logMessage("Uploading Test image")
-            val objectId = MongoDatabase.upload("2", resourceName)
-            logMessage(objectId)
-            logMessage("Uploaded Image")
+            val UPLOAD_PHOTO_IMG = "0"
+            if (imageId == UPLOAD_PHOTO_IMG) {
 
-            logMessage("Requesting image download")
-            MongoDatabase.download(objectId, resourceName)
-            val image = File("dbuffer/$resourceName.jpg")
-
-            image.parentFile.mkdirs()
-            image.createNewFile()
-
-            if (image.exists()) {
+                val image = File("dbuffer/cloud-upload.jpg")
+                if (image.exists()) logMessage("Image exits")
                 call.respondFile(image)
-            } else {
-                call.respond(HttpStatusCode.NotFound)
+            }
+            else {
+                logMessage("Requesting image download")
+                MongoDatabase.download(imageId, resourceName)
+                val image = File("dbuffer/$resourceName.jpg")
+
+                image.parentFile.mkdirs()
+                image.createNewFile()
+
+                if (image.exists()) {
+                    call.respondFile(image)
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
+                }
             }
         }
 
         post("/api/v1/uploads") {
+            val multipart = call.receiveMultipart()
+            var userId = ""
+            var userType = ""
+            var resourceName = ""
+            multipart.forEachPart { part ->
+                if (part is PartData.FormItem) {
+                    when (part.name) {
+                        "user-type" -> userType = part.value
+                        "user-Id" -> userId = part.value
+                        "resource-name" -> resourceName = part.value
+                    }
+                } else if (part is PartData.FileItem) {
 
+                    // Create upload buffer for the first time
+                    val file = File("ubuffer/$resourceName.jpg")
+                    file.parentFile.mkdirs()
+                    file.createNewFile()
 
+                    // Upload to buffer
+                    part.streamProvider().use {input ->
+                        file.outputStream().buffered().use {output ->
+                            input.copyTo(output)
+                        }
+                    }
 
+                    // Upload to database
+                    val fileId = MongoDatabase.upload(userType, userId, resourceName)
 
+                    // Update Database file handlers
+                    when (resourceName) {
+                        "profile" -> {
+                            if (userType == "1") {
+                                var restaurants = MongoDatabase.find<Restaurant>( Restaurant::_id eq userId)
+                                if (restaurants.isNotEmpty()) {
+                                    var restaurant = restaurants.first()
+                                    updateFileId(0, fileId, userId, restaurant)
+                                }
+                            }
+                            if (userType == "2") {
+                                var workers = MongoDatabase.find<Worker>( Worker::_id eq userId)
+                                if (workers.isNotEmpty()) {
+                                    var worker = workers.first()
+                                    updateFileId(0, fileId, userId, worker)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         post("/api/v1/login") {
