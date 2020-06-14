@@ -7,6 +7,11 @@ interface Collection {
     val _id: String?
 }
 
+interface ImageCollector {
+    val _id: String?
+    val imageIds: MutableList<String>
+}
+
 data class Worker(
         override val _id: String? = null,
         val fname: String = "",
@@ -19,8 +24,8 @@ data class Worker(
         val expertiseIds: MutableList<Int> = mutableListOf(),
         var ratingTotal: Double = 0.0,
         var ratingCount: Int = 0,
-        val imageIds: MutableList<String> = mutableListOf()
-) : Collection
+        override val imageIds: MutableList<String> = mutableListOf("0")
+) : Collection, ImageCollector
 
 
 data class Restaurant(
@@ -33,11 +38,11 @@ data class Restaurant(
     val rating: Double = 5.0,
     val longitude: Double = 0.0,
     val latitude: Double = 0.0,
-    val imageIds: MutableList<String> = mutableListOf(),
+    override val imageIds: MutableList<String> = mutableListOf("0"),
     val facebookLink: String = "",
     val twitterLink: String = "",
     val instagramLink: String = ""
-) : Collection
+) : Collection, ImageCollector
 
 data class User(
     override val _id: String? = null,
