@@ -24,19 +24,19 @@ data class Worker(
 
 
 data class Restaurant(
-    override val _id: String? = null,
-    val name: String = " ",
-    val address: String = " ",
-    val phone: Long = 79999999,
-    val staffUserIds: MutableList<String> = mutableListOf(),
-    val restaurantEmailAddress: String = " ",
-    val rating: Double = 5.0,
-    val longitude: Double = 0.0,
-    val latitude: Double = 0.0,
-    val imageIds: MutableList<String> = mutableListOf(),
-    val facebookLink: String = "",
-    val twitterLink: String = "",
-    val instagramLink: String = ""
+        override val _id: String? = null,
+        var name: String = " ",
+        var address: String = " ",
+        var phone: Long = 79999999,
+        val staffUserIds: MutableList<String> = mutableListOf(),
+        var restaurantEmailAddress: String = " ",
+        val rating: Double = 5.0,
+        var longitude: Double = 0.0,
+        var latitude: Double = 0.0,
+        val imageIds: MutableList<String> = mutableListOf(),
+        var facebookLink: String = "",
+        var twitterLink: String = "",
+        var instagramLink: String = ""
 ) : Collection
 
 data class User(
