@@ -21,7 +21,8 @@ data class SignupWorker(
         val lname: String,
         val credentials: MutableList<String>,
         val phone: Long,
-        val dob: String
+        val dob: String,
+        val fcmToken: String
 ) : Credentials
 
 data class SignupRestaurant(
@@ -30,7 +31,8 @@ data class SignupRestaurant(
         val name: String,
         val address: String,
         val phone: Long,
-        val restaurantEmailAddress: String
+        val restaurantEmailAddress: String,
+        val fcmToken: String
 ) : Credentials
 
 data class LoginAttempt(

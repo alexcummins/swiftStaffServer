@@ -90,7 +90,7 @@ fun Application.module() {
 
             if (success) {
                 logMessage("About to create user")
-                val user = createUser(signup, worker, UserType.Worker)
+                val user = createUser(signup = signup, collection = worker, userType = UserType.Worker, fcmToken = signup.fcmToken)
                 logMessage("User Created")
                 val success = MongoDatabase.insert(user)
                 logMessage("User succesfully inserted")
@@ -126,7 +126,7 @@ fun Application.module() {
             )
             val success = MongoDatabase.insert(restaurant)
             if (success) {
-                val user = createUser(signup, restaurant, UserType.Restaurant)
+                val user = createUser(signup = signup, collection = restaurant, userType = UserType.Restaurant, fcmToken = signup.fcmToken)
                 val success = MongoDatabase.insert(user)
                 if (success) {
                     call.respond(
@@ -488,7 +488,16 @@ fun Application.module() {
                                 )
                             }
                         }
-                        // Add restaurant job Response
+                        val jobsList: MutableList<JobResponseForRestaurant> = openJobsForRestaurant(restaurantId = RestaurantId(job.restaurantId))
+                        if (jobsList.isNotEmpty()) {
+                            call.respond(status = HttpStatusCode.OK, message = JobsForRestaurant(jobsList.size, jobsList))
+                            updateWebSockets(wsConnections)
+                        } else {
+                            logMessage("No jobs");
+                            call.respond(status = HttpStatusCode.NotFound, message = "No jobs found")
+                            updateWebSockets(wsConnections)
+
+                        }
                     }
                     JobCommand.WORKER_DECLINE.num -> {
                         logMessage("Worker decline recieved")
@@ -502,21 +511,31 @@ fun Application.module() {
                         updateWebSockets(wsConnections)
                         if (newJobs.isNotEmpty()) {
                             call.respond(status = HttpStatusCode.OK, message = Jobs(newJobs.size, newJobs))
+                            updateWebSockets(wsConnections)
                         } else {
                             logMessage("No jobs");
                             call.respond(status = HttpStatusCode.NotFound, message = "No jobs found")
+                            updateWebSockets(wsConnections)
                         }
                     }
                     JobCommand.RESTAURANT_DECLINE.num -> {
                         job.sentList.remove(patchRequest.workerId)
                         job.reviewList.remove(patchRequest.workerId)
                         MongoDatabase.update(job, Job::_id eq job._id)
-                        // Add restaurant job Response
+                        val jobsList: MutableList<JobResponseForRestaurant> = openJobsForRestaurant(restaurantId = RestaurantId(job.restaurantId))
+                        if (jobsList.isNotEmpty()) {
+                            call.respond(status = HttpStatusCode.OK, message = JobsForRestaurant(jobsList.size, jobsList))
+                            updateWebSockets(wsConnections)
+                        } else {
+                            logMessage("No jobs");
+                            call.respond(status = HttpStatusCode.NotFound, message = "No jobs found")
+                            updateWebSockets(wsConnections)
+                        }
                     }
                 }
             } else {
                 call.respond(message = "Not Found", status = HttpStatusCode.NotFound)
-
+                updateWebSockets(wsConnections)
             }
         }
 
@@ -612,7 +631,7 @@ private suspend fun internalServerError(message: String = "Internal Server Error
     return call.respond(message = message, status = HttpStatusCode.InternalServerError)
 }
 
-private fun createUser(signup: Credentials, collection: Collection, userType: UserType): User {
+private fun createUser(signup: Credentials, collection: Collection, userType: UserType, fcmToken: String = ""): User {
     logMessage("About to generate salt")
     val salt: String = generateSalt()
     logMessage("Salt generated")
@@ -626,7 +645,8 @@ private fun createUser(signup: Credentials, collection: Collection, userType: Us
             passwordHash = passwordHash,
             salt = salt,
             userType = userType.num,
-            foreignTableId = collection._id!!
+            foreignTableId = collection._id!!,
+            fcmTokens = mutableListOf(fcmToken)
     )
 }
 
