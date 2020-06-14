@@ -94,6 +94,7 @@ data class WorkerProfile(
         val userId: String,
         val fname: String,
         val lname: String,
+        val profileImageId: String,
         val phone: Long,
         val address: String,
         val skillsAndQualities: MutableList<String>,
