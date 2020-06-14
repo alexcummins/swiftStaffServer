@@ -249,6 +249,50 @@ fun Application.module() {
             }
         }
 
+        put("/api/v1/update/profile/restaurant") {
+
+            logMessage("Handle update restaurant profile request")
+
+            val updatedRestaurant = call.receive<UpdatedRestaurant>()
+            logMessage("Profile to be updated")
+
+            val restaurants = MongoDatabase.find<Restaurant>(Restaurant::_id
+                    eq updatedRestaurant.restaurantId)
+
+            if (restaurants.isNotEmpty()) {
+                val restaurant = restaurants.first()
+                logMessage("Profile found")
+
+                if (!updatedRestaurant.name.isNullOrBlank()) restaurant.name =
+                        updatedRestaurant.name
+                if (!updatedRestaurant.email.isNullOrBlank()) restaurant
+                        .restaurantEmailAddress = updatedRestaurant.email
+                if (updatedRestaurant.phone > 0) restaurant.phone = updatedRestaurant.phone
+                if (!updatedRestaurant.facebookLink.isNullOrBlank()) restaurant
+                        .facebookLink = updatedRestaurant.facebookLink
+                if (!updatedRestaurant.twitterLink.isNullOrBlank()) restaurant
+                        .twitterLink = updatedRestaurant.twitterLink
+                if (!updatedRestaurant.instagramLink.isNullOrBlank()) restaurant
+                        .instagramLink = updatedRestaurant.instagramLink
+                if (!updatedRestaurant.address.isNullOrBlank()) {
+                    restaurant.address = updatedRestaurant.address
+                    val latLng = addressToLatLong(updatedRestaurant.address)
+                    restaurant.latitude = latLng.first
+                    restaurant.longitude = latLng.second
+                }
+
+                //Update Restaurant Info
+                MongoDatabase.update(restaurant, Restaurant::_id eq
+                        updatedRestaurant.restaurantId)
+                call.respond(HttpStatusCode.OK, message = LatLong(latitude =
+                restaurant.latitude, longitude = restaurant.longitude))
+
+            } else {
+                logMessage("Profile Updation Failed")
+                call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
+            }
+        }
+
 
         post("/api/v1/profile/worker") {
             logMessage("Handle worker profile request")
