@@ -317,7 +317,7 @@ fun Application.module() {
                 val latLng = addressToLatLong(updatedRestaurant.address)
                 restaurant.latitude = latLng.first
                 restaurant.longitude = latLng.second
-
+                restaurant.description = updatedRestaurant.description
                 //Update Restaurant Info
                 MongoDatabase.update(restaurant, Restaurant::_id eq
                         updatedRestaurant.restaurantId)
