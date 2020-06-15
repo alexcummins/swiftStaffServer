@@ -49,7 +49,8 @@ data class UpdatedRestaurant(
         val phone: Long,
         val facebookLink: String,
         val twitterLink: String,
-        val instagramLink: String
+        val instagramLink: String,
+        val description: String
 )
 
 data class LatLong(
