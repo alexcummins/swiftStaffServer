@@ -296,7 +296,8 @@ fun Application.module() {
                         latitude = restaurant.latitude,
                         facebookLink = restaurant.facebookLink,
                         twitterLink = restaurant.twitterLink,
-                        instagramLink = restaurant.instagramLink)
+                        instagramLink = restaurant.instagramLink,
+                        description = restaurant.description)
                 call.respond(status = HttpStatusCode.OK, message = restaurantProfile)
             } else {
                 call.respond(message = "Internal Server Error", status =

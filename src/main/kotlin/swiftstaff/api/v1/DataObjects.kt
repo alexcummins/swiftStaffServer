@@ -162,7 +162,8 @@ data class RestaurantProfile(
         val latitude: Double,
         val facebookLink: String,
         val twitterLink: String,
-        val instagramLink: String
+        val instagramLink: String,
+        val description: String
 )
 
 
