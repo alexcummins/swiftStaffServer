@@ -7,3 +7,5 @@ out/
 *.http
 nohup.out
 server.log
+dbuffer/
+ubuffer/
