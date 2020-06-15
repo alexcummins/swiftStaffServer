@@ -293,7 +293,7 @@ fun Application.module() {
             }
         }
 
-        put("/api/v1/update/profile/restaurant") {
+        put("/api/v1/edit/profile/restaurant") {
 
             logMessage("Handle update restaurant profile request")
 
@@ -307,32 +307,24 @@ fun Application.module() {
                 val restaurant = restaurants.first()
                 logMessage("Profile found")
 
-                if (!updatedRestaurant.name.isNullOrBlank()) restaurant.name =
-                        updatedRestaurant.name
-                if (!updatedRestaurant.email.isNullOrBlank()) restaurant
-                        .restaurantEmailAddress = updatedRestaurant.email
-                if (updatedRestaurant.phone > 0) restaurant.phone = updatedRestaurant.phone
-                if (!updatedRestaurant.facebookLink.isNullOrBlank()) restaurant
-                        .facebookLink = updatedRestaurant.facebookLink
-                if (!updatedRestaurant.twitterLink.isNullOrBlank()) restaurant
-                        .twitterLink = updatedRestaurant.twitterLink
-                if (!updatedRestaurant.instagramLink.isNullOrBlank()) restaurant
-                        .instagramLink = updatedRestaurant.instagramLink
-                if (!updatedRestaurant.address.isNullOrBlank()) {
-                    restaurant.address = updatedRestaurant.address
-                    val latLng = addressToLatLong(updatedRestaurant.address)
-                    restaurant.latitude = latLng.first
-                    restaurant.longitude = latLng.second
-                }
+                restaurant.name = updatedRestaurant.name
+                restaurant.restaurantEmailAddress = updatedRestaurant.email
+                restaurant.phone = updatedRestaurant.phone.toLong()
+                restaurant.facebookLink = updatedRestaurant.facebookLink
+                restaurant.twitterLink = updatedRestaurant.twitterLink
+                restaurant.instagramLink = updatedRestaurant.instagramLink
+                restaurant.address = updatedRestaurant.address
+                val latLng = addressToLatLong(updatedRestaurant.address)
+                restaurant.latitude = latLng.first
+                restaurant.longitude = latLng.second
 
                 //Update Restaurant Info
                 MongoDatabase.update(restaurant, Restaurant::_id eq
                         updatedRestaurant.restaurantId)
-                call.respond(HttpStatusCode.OK, message = LatLong(latitude =
-                restaurant.latitude, longitude = restaurant.longitude))
+                call.respond(status = HttpStatusCode.OK, message = "Updated Restaurant Profile")
 
             } else {
-                logMessage("Profile Updation Failed")
+                logMessage("Profile Update Failed")
                 call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
             }
         }
