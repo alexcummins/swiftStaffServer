@@ -781,7 +781,7 @@ fun sendNotificationToUserByForeignId(
         data: Map<String, String>? = null) {
     val users = MongoDatabase.find<User>(User::foreignTableId eq foreignTableId)
     if (users.isNotEmpty()) {
-        val registrationTokens = users.first().fcmTokens
+        val registrationTokens = users.first().fcmTokens.toMutableSet()
         registrationTokens.forEach { registrationToken ->
             logMessage("Sending notification to ${users.first().email} and token $registrationToken with message $notificationMessage")
             sendFirebaseNotification(registrationToken = registrationToken, notificationMessage = notificationMessage, notificationTitle = notificationTitle, data = data)
