@@ -259,7 +259,7 @@ fun Application.module() {
                         userId = worker._id.orEmpty(),
                         fname = worker.fname,
                         lname = worker.lname,
-                        profileImageId = if (worker.imageIds.size == 0) "0" else worker.imageIds[0], // Old safe measure artefact, delete when we do a drop()
+                        profileImageId = worker.imageIds[0], // Old safe measure artefact, delete when we do a drop()
                         phone = worker.phone,
                         address = worker.address,
                         skillsAndQualities = worker.skillsAndQualities,
@@ -297,7 +297,8 @@ fun Application.module() {
                         facebookLink = restaurant.facebookLink,
                         twitterLink = restaurant.twitterLink,
                         instagramLink = restaurant.instagramLink,
-                        description = restaurant.description)
+                        description = restaurant.description,
+                        profileImageId = restaurant.imageIds[0])
                 call.respond(status = HttpStatusCode.OK, message = restaurantProfile)
             } else {
                 call.respond(message = "Internal Server Error", status =
@@ -333,6 +334,7 @@ fun Application.module() {
         }
 
         post("/api/v1/uploads") {
+            logMessage("Uploading")
             val multipart = call.receiveMultipart()
             var userId = ""
             var userType = ""
@@ -344,6 +346,7 @@ fun Application.module() {
                         "user-Id" -> userId = part.value
                         "resource-name" -> resourceName = part.value
                     }
+                    logMessage("user: $userId type: $userType resource: $resourceName")
                 } else if (part is PartData.FileItem) {
 
                     // Create upload buffer for the first time

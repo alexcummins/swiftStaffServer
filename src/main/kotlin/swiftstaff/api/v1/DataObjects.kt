@@ -163,7 +163,8 @@ data class RestaurantProfile(
         val facebookLink: String,
         val twitterLink: String,
         val instagramLink: String,
-        val description: String
+        val description: String,
+        val profileImageId: String
 )
 
 
