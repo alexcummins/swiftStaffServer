@@ -98,10 +98,23 @@ data class WorkerProfile(
         val phone: Long,
         val address: String,
         val skillsAndQualities: MutableList<String>,
+        val qualifications: MutableList<String>,
         val experience: MutableList<String>,
         val personalStatement: String,
         val ratingTotal: Double,
         val ratingCount: Int
+)
+
+data class WorkerProfileEditRequest(
+        val workerId: String,
+        val firstName: String,
+        val lastName: String,
+        val address: String,
+        val phoneNumber: String,
+        val skillsAndQualities: MutableList<String>,
+        val qualifications: MutableList<String>,
+        val experience: MutableList<String>,
+        val personalStatement: String
 )
 
 data class UploadInfo(
