@@ -18,6 +18,7 @@ import io.ktor.gson.gson
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.Created
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.http.cio.websocket.*
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
@@ -162,7 +163,7 @@ fun Application.module() {
             logMessage("WorkersSize: " + MongoDatabase.db.getCollection("worker").countDocuments())
 
             val workers = MongoDatabase.find<Worker>(Worker::_id eq workerRequest.userId)
-            logMessage("Found Workers:" + workers.size)
+            logMessage("Found Workers: " + workers.size)
 
             if (workers.isNotEmpty()) {
                 val worker = workers.first()
@@ -177,6 +178,33 @@ fun Application.module() {
             }
         }
 
+        put("/api/v1/edit/profile/worker") {
+            logMessage("Handle worker edit profile request")
+
+            val workerRequest = call.receive<WorkerProfileEditRequest>()
+            logMessage("WorkersSize: " + MongoDatabase.db.getCollection("worker").countDocuments())
+
+            val workers = MongoDatabase.find<Worker>(Worker::_id eq workerRequest.workerId)
+            logMessage("Found Workers: " + workers.size)
+
+            if (workers.isNotEmpty()) {
+                var worker = workers.first()
+                worker.fname = workerRequest.firstName
+                worker.lname = workerRequest.lastName
+                worker.address = workerRequest.address
+                worker.phone = (workerRequest.phoneNumber).toLong()
+                worker.skillsAndQualities = workerRequest.skillsAndQualities
+                worker.qualifications = workerRequest.qualifications
+                worker.experience = workerRequest.experience
+                worker.personalStatement = workerRequest.personalStatement
+
+                logMessage("Updating worker")
+                MongoDatabase.update(worker, Worker::_id eq workerRequest.workerId)
+                call.respond(message = "Updated Worker", status = OK)
+            } else {
+                call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
+            }
+        }
 
         post("/api/v1/profile/worker") {
             logMessage("Handle worker profile request")
@@ -197,9 +225,10 @@ fun Application.module() {
                         lname = worker.lname,
                         profileImageId = if (worker.imageIds.size == 0) "0" else worker.imageIds[0], // Old safe measure artefact, delete when we do a drop()
                         phone = worker.phone,
-                        address = " ",
-                        skillsAndQualities = MutableList(3) { _ -> "Test" },
-                        experience = MutableList(3) { _ -> "Test" },
+                        address = worker.address,
+                        skillsAndQualities = worker.skillsAndQualities,
+                        qualifications = worker.qualifications,
+                        experience = worker.experience,
                         personalStatement = worker.personalStatement,
                         ratingTotal = worker.ratingTotal,
                         ratingCount = worker.ratingCount)
@@ -315,6 +344,7 @@ fun Application.module() {
                             }
                         }
                     }
+                    call.respond(message = "Uploaded $resourceName", status = OK)
                 }
             }
         }
