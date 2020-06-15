@@ -41,6 +41,22 @@ data class LoginAttempt(
         val fcmToken: String
 ) : Credentials
 
+data class UpdatedRestaurant(
+        val restaurantId: String,
+        val email: String,
+        val name: String,
+        val address: String,
+        val phone: Long,
+        val facebookLink: String,
+        val twitterLink: String,
+        val instagramLink: String,
+        val description: String
+)
+
+data class LatLong(
+        val latitude: Double,
+        val longitude: Double
+)
 
 data class LoginWorkerResponse(
         val userId: String,
@@ -144,7 +160,6 @@ data class RestaurantProfile(
         val email: String,
         val longitude: Double,
         val latitude: Double,
-        val backgroundImage: String,
         val facebookLink: String,
         val twitterLink: String,
         val instagramLink: String

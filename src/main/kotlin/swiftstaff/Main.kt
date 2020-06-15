@@ -73,7 +73,6 @@ fun Application.module() {
 
 
     routing {
-
         post("/api/v1/signup/worker") {
             val signup = call.receive<SignupWorker>()
             logMessage("Worker Signup correctly recieved")
@@ -206,6 +205,43 @@ fun Application.module() {
             }
         }
 
+        put("/api/v1/edit/profile/restaurant") {
+
+            logMessage("Handle update restaurant profile request")
+
+            val updatedRestaurant = call.receive<UpdatedRestaurant>()
+            logMessage("Profile to be updated")
+
+            val restaurants = MongoDatabase.find<Restaurant>(Restaurant::_id
+                    eq updatedRestaurant.restaurantId)
+
+            if (restaurants.isNotEmpty()) {
+                val restaurant = restaurants.first()
+                logMessage("Profile found")
+
+                restaurant.name = updatedRestaurant.name
+                restaurant.restaurantEmailAddress = updatedRestaurant.email
+                restaurant.phone = updatedRestaurant.phone.toLong()
+                restaurant.facebookLink = updatedRestaurant.facebookLink
+                restaurant.twitterLink = updatedRestaurant.twitterLink
+                restaurant.instagramLink = updatedRestaurant.instagramLink
+                restaurant.address = updatedRestaurant.address
+                val latLng = addressToLatLong(updatedRestaurant.address)
+                restaurant.latitude = latLng.first
+                restaurant.longitude = latLng.second
+                restaurant.description = updatedRestaurant.description
+                //Update Restaurant Info
+                MongoDatabase.update(restaurant, Restaurant::_id eq
+                        updatedRestaurant.restaurantId)
+                call.respond(status = HttpStatusCode.OK, message = "Updated Restaurant Profile")
+
+            } else {
+                logMessage("Profile Update Failed")
+                call.respond(message = "Internal Server Error", status = HttpStatusCode.InternalServerError)
+            }
+        }
+
+
         post("/api/v1/profile/worker") {
             logMessage("Handle worker profile request")
 
@@ -258,7 +294,6 @@ fun Application.module() {
                         phone = restaurant.phone,
                         longitude = restaurant.longitude,
                         latitude = restaurant.latitude,
-                        backgroundImage = "",
                         facebookLink = restaurant.facebookLink,
                         twitterLink = restaurant.twitterLink,
                         instagramLink = restaurant.instagramLink)
