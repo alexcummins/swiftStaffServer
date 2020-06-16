@@ -31,11 +31,14 @@ object MongoDatabase :  Database {
     val imageBucket: GridFSBucket
 
     init {
-        val username: String = System.getenv("DB_USERNAME") ?: "mongoadmin"
-        val password: String = System.getenv("DB_PASSWORD") ?: "mongoadmin"
-        val server: String = System.getenv("SERVER_ADDRESS") ?: "127.0.0.1"
-        val databaseName: String = System.getenv("DATABASE") ?: "test"
-
+//        val username: String = System.getenv("DB_USERNAME") ?: "mongoadmin"
+//        val password: String = System.getenv("DB_PASSWORD") ?: "mongoadmin"
+//        val server: String = System.getenv("SERVER_ADDRESS") ?: "127.0.0.1"
+//        val databaseName: String = System.getenv("DATABASE") ?: "test"
+        val username: String = System.getenv("DB_USERNAME") ?: "swiftstaffserver"
+        val password: String = System.getenv("DB_PASSWORD") ?: "SwiftStaff"
+        val server: String = System.getenv("SERVER_ADDRESS") ?: "157.245.41.249"
+        val databaseName: String = System.getenv("DATABASE") ?: "SwiftStaffProdV3"
         this.connectionString = ConnectionString("mongodb://$username:$password@$server")
         this.mongoClient = KMongo.createClient(connectionString)
         this.db = this.mongoClient.getDatabase(databaseName)

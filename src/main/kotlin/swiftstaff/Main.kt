@@ -520,12 +520,6 @@ fun Application.module() {
                         MongoDatabase.update(job, Job::_id eq job._id)
                         val newJobs = openJobsForWorker(workerId = WorkerId(workerId = patchRequest.workerId))
                         updateWebSockets(wsConnections)
-                        if (newJobs.isNotEmpty()) {
-                            call.respond(status = HttpStatusCode.OK, message = Jobs(newJobs.size, newJobs))
-                        } else {
-                            call.respond(status = HttpStatusCode.NotFound, message = "No jobs found")
-                        }
-
                         val restaurants = MongoDatabase.find<Restaurant>(Restaurant::_id eq job.restaurantId)
                         if (restaurants.isNotEmpty()) {
                             restaurants.forEach { restaurant ->
@@ -536,6 +530,15 @@ fun Application.module() {
                                         notificationTitle = "Response to Job Request"
                                 )
                             }
+                        }
+                        logMessage("About to respond worker accept")
+                        if (newJobs.isNotEmpty()) {
+                            logMessage("Successfult response worker accept")
+                            call.respond(status = HttpStatusCode.OK, message = Jobs(newJobs.size, newJobs))
+                        } else {
+                            logMessage("unsuccessfult response woker accept")
+
+                            call.respond(status = HttpStatusCode.BadGateway, message = "No jobs found")
                         }
                     }
                     JobCommand.RESTAURANT_ACCEPT.num -> {
@@ -558,13 +561,14 @@ fun Application.module() {
                             }
                         }
                         val jobsList: MutableList<JobResponseForRestaurant> = openJobsForRestaurant(restaurantId = RestaurantId(job.restaurantId))
+                        updateWebSockets(wsConnections)
+                        logMessage("About to respond restaurant accept")
                         if (jobsList.isNotEmpty()) {
+                            logMessage("Successfult response restaurant accept")
                             call.respond(status = HttpStatusCode.OK, message = JobsForRestaurant(jobsList.size, jobsList))
-                            updateWebSockets(wsConnections)
                         } else {
                             logMessage("No jobs");
-                            call.respond(status = HttpStatusCode.NotFound, message = "No jobs found")
-                            updateWebSockets(wsConnections)
+                            call.respond(status = HttpStatusCode.BadGateway, message = "No jobs found")
 
                         }
                     }
@@ -580,11 +584,9 @@ fun Application.module() {
                         updateWebSockets(wsConnections)
                         if (newJobs.isNotEmpty()) {
                             call.respond(status = HttpStatusCode.OK, message = Jobs(newJobs.size, newJobs))
-                            updateWebSockets(wsConnections)
                         } else {
                             logMessage("No jobs");
-                            call.respond(status = HttpStatusCode.NotFound, message = "No jobs found")
-                            updateWebSockets(wsConnections)
+                            call.respond(status = HttpStatusCode.BadGateway, message = "No jobs found")
                         }
                     }
                     JobCommand.RESTAURANT_DECLINE.num -> {
@@ -592,18 +594,17 @@ fun Application.module() {
                         job.reviewList.remove(patchRequest.workerId)
                         MongoDatabase.update(job, Job::_id eq job._id)
                         val jobsList: MutableList<JobResponseForRestaurant> = openJobsForRestaurant(restaurantId = RestaurantId(job.restaurantId))
+                        updateWebSockets(wsConnections)
                         if (jobsList.isNotEmpty()) {
                             call.respond(status = HttpStatusCode.OK, message = JobsForRestaurant(jobsList.size, jobsList))
-                            updateWebSockets(wsConnections)
                         } else {
                             logMessage("No jobs");
-                            call.respond(status = HttpStatusCode.NotFound, message = "No jobs found")
-                            updateWebSockets(wsConnections)
+                            call.respond(status = HttpStatusCode.BadGateway, message = "No jobs found")
                         }
                     }
                 }
             } else {
-                call.respond(message = "Not Found", status = HttpStatusCode.NotFound)
+                call.respond(message = "Not Found", status = HttpStatusCode.BadRequest)
                 updateWebSockets(wsConnections)
             }
         }
