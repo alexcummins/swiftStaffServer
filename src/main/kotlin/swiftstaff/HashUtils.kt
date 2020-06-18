@@ -1,12 +1,10 @@
 package swiftstaff
 
-import at.favre.lib.crypto.bcrypt.BCrypt
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
 import kotlin.random.Random
 import java.security.MessageDigest;
 
-// Documentation https://github.com/patrickfav/bcrypt
 
 fun generateSalt(): String {
     return String(Random.nextBytes(16), StandardCharsets.ISO_8859_1)

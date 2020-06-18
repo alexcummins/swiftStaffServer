@@ -4,6 +4,7 @@ plugins {
     application
     kotlin("jvm") version "1.3.70"
     id("com.github.johnrengelman.shadow") version "5.2.0"
+    id("com.github.hierynomus.license") version "0.15.0"
 }
 
 application {
@@ -29,7 +30,6 @@ dependencies {
     implementation(group = "org.slf4j", name = "slf4j-log4j12", version = "1.7.5")
     implementation("org.mongodb:mongodb-driver-sync:4.0.3")
     implementation("org.litote.kmongo:kmongo:4.0.1")
-    implementation("at.favre.lib:bcrypt:0.9.0")
     testImplementation(kotlin("test"))
     testImplementation(kotlin("test-junit"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
