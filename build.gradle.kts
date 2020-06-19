@@ -19,7 +19,6 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("org.apache.commons:commons-text:1.8")
-    implementation("com.xenomachina:kotlin-argparser:2.0.7")
     runtime(group = "org.apache.commons", name = "commons-lang3", version = "3.9")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-jackson:$ktorVersion")
