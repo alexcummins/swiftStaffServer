@@ -92,6 +92,9 @@ To log in to the real database, first ssh in (ip on trello, ssh keys should be s
 mongo --username <username> --password <password> --authenticationDatabase "admin"
 ```
 
+### Licence
+
+GNU General Public License (See LICENCE)
 
 
 
